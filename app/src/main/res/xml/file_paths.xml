@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- App-specific external: Android/data/com.hazel.android/files/ -->
+    <!-- App-specific external: Android/data/com.muhammedasadn.mediaconverter/files/ -->
     <external-files-path
         name="hazel_downloads"
-        path="Hazel/" />
+        path="MediaConverter/" />
     <external-files-path
         name="hazel_music"
         path="Music/" />
-    <!-- Public Downloads: /storage/emulated/0/Download/Hazel/ -->
+    <!-- Public Downloads: /storage/emulated/0/Download/MediaConverter/ -->
     <external-path
         name="public_downloads"
-        path="Download/Hazel/" />
-    <!-- Public Music: /storage/emulated/0/Music/Hazel/ -->
+        path="Download/MediaConverter/" />
+    <!-- Public Music: /storage/emulated/0/Music/MediaConverter/ -->
     <external-path
         name="public_music"
-        path="Music/Hazel/" />
+        path="Music/MediaConverter/" />
     <!-- App updates cache: getCacheDir()/updates/ -->
     <cache-path
         name="updates"

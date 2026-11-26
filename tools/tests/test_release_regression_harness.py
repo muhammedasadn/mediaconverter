@@ -714,7 +714,7 @@ def run_tests():
         check_true("Launcher foreground strokeColor is #FFFFFF", 'android:strokeColor="#FFFFFF"' in fg_content)
 
     # Test 8.3: SponsorScreen Constants
-    sponsor_kt = REPO_ROOT / "app/src/main/java/com/hazel/android/ui/screens/more/SponsorScreen.kt"
+    sponsor_kt = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/ui/screens/more/SponsorScreen.kt"
     if sponsor_kt.exists():
         sponsor_text = sponsor_kt.read_text(encoding="utf-8")
         check_true("BMAC URL is set to sibtainocean", 'BMAC_URL = "https://buymeacoffee.com/sibtainocean"' in sponsor_text)
@@ -828,7 +828,7 @@ def run_tests():
     # and collectAsState starts collecting it afresh, so the stored value is read and decoded
     # again. Screens that watch the download redraw several times a second while it runs.
     print("\n--- Suite 10: Stored settings collected from one flow per screen ---")
-    src = REPO_ROOT / "app/src/main/java/com/hazel/android"
+    src = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter"
     fresh = re.compile(r"(?<!\{ )\b[A-Z]\w*(?:Repository|Store)\.\w+\((?:context|this)\)\s*\.collectAsState\(")
     kept = re.compile(r"remember\((?:context|this)\) \{ [A-Z]\w*(?:Repository|Store)\.\w+\((?:context|this)\) \}\s*\.collectAsState\(")
     # The queue screen's flows are kept, and checked, with the queue's own work.

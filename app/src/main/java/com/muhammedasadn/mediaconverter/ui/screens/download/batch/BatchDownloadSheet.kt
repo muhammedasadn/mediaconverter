@@ -1,0 +1,1257 @@
+package com.muhammedasadn.mediaconverter.ui.screens.download.batch
+
+import com.muhammedasadn.mediaconverter.data.SettingsRepository
+import androidx.compose.ui.platform.LocalContext
+import com.muhammedasadn.mediaconverter.ui.components.MenuTone
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.SwapVert
+import com.muhammedasadn.mediaconverter.ui.theme.sheetRaisedColor
+import com.muhammedasadn.mediaconverter.ui.theme.sheetButtonColor
+import com.muhammedasadn.mediaconverter.ui.theme.sheetBlackColor
+import com.muhammedasadn.mediaconverter.ui.components.rememberScrollShrink
+import com.muhammedasadn.mediaconverter.ui.components.scrollShrink
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ClosedCaption
+import androidx.compose.material.icons.filled.Cookie
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.BottomSheetDefaults
+import com.muhammedasadn.mediaconverter.ui.components.DropdownMenu
+import com.muhammedasadn.mediaconverter.ui.components.DropdownMenuItem
+import com.muhammedasadn.mediaconverter.ui.components.ShapeIconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import com.muhammedasadn.mediaconverter.ui.components.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.style.TextOverflow
+import android.view.View
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.muhammedasadn.mediaconverter.R
+import com.muhammedasadn.mediaconverter.ui.components.SheetHeaderLayout
+import com.muhammedasadn.mediaconverter.download.DownloadOptions
+import com.muhammedasadn.mediaconverter.download.DownloadPlan
+import com.muhammedasadn.mediaconverter.download.MediaFormat
+import com.muhammedasadn.mediaconverter.download.extractor.ListingSource
+import com.muhammedasadn.mediaconverter.download.extractor.newpipe.NewPipeEngine
+import com.muhammedasadn.mediaconverter.download.MediaInfo
+import com.muhammedasadn.mediaconverter.ui.components.AlertDialog
+import com.muhammedasadn.mediaconverter.ui.components.FlatChip
+import com.muhammedasadn.mediaconverter.download.WORST_HEIGHT
+import com.muhammedasadn.mediaconverter.download.BatchAudioFormats
+import com.muhammedasadn.mediaconverter.download.GenericFormats
+import com.muhammedasadn.mediaconverter.download.formatFileSize
+import com.muhammedasadn.mediaconverter.download.languageLabel
+import com.muhammedasadn.mediaconverter.ui.screens.download.AudioLanguageSheet
+import com.muhammedasadn.mediaconverter.ui.screens.download.ChaptersDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.CookiesDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.SaveLocationScreen
+import com.muhammedasadn.mediaconverter.ui.screens.download.rememberUseCookies
+import com.muhammedasadn.mediaconverter.ui.screens.download.LinkOptionsDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.FEEDBACK_MS
+import com.muhammedasadn.mediaconverter.ui.screens.download.FeedbackToast
+import com.muhammedasadn.mediaconverter.ui.screens.download.FilenameTemplateSheet
+import com.muhammedasadn.mediaconverter.ui.screens.download.FormatSheet
+import com.muhammedasadn.mediaconverter.ui.screens.download.OptionChip
+import com.muhammedasadn.mediaconverter.ui.screens.download.SheetSection
+import com.muhammedasadn.mediaconverter.ui.screens.download.SponsorBlockDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.SubtitlesDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.ThumbnailDialog
+import com.muhammedasadn.mediaconverter.ui.screens.download.FormatSelectionSheet
+import com.muhammedasadn.mediaconverter.data.SaveDirs
+import com.muhammedasadn.mediaconverter.util.SdCard
+import com.muhammedasadn.mediaconverter.ui.components.keepFlingInSheet
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
+
+/**
+ * Settings for a whole set of links, whether they came from several pasted urls or from
+ * one playlist.
+ *
+ * The sheet is a list, an Adjust section under it, and a row of buttons below that. Tapping
+ * a link opens that link's own format list, so a set can be part 1080p and part audio and
+ * still go out in one download. The row of buttons holds the three choices a set is most
+ * often changed by (kind, quality ceiling, folder); the adjust-download options and the
+ * container sit in the Adjust section, which opens and closes the way the single download
+ * sheet's sections do, so the list keeps the height while it is closed.
+ *
+ * On a phone held sideways the same parts sit in two panes: the list down one side at the
+ * sheet's full height, and the heading, the Adjust section, the buttons and Download down
+ * the other. Stacked, a screen that short left the list a single row.
+ *
+ * A search button beside the count opens a field in the same row that narrows the list to
+ * the links whose title, channel or address match, for a playlist too long to scroll.
+ *
+ * Ticking is a separate mode, reached by holding a link or from the list menu, and it
+ * narrows what the buttons act on. It never decides what gets downloaded: the download
+ * always covers every link in the list, which is why a set collected on purpose does not
+ * have to be ticked again before it will go.
+ *
+ * The choices themselves live in [BatchDownloadState], which is what keeps a change from
+ * one row and a change from the buttons from treading on each other.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun BatchDownloadSheet(
+    results: List<MediaInfo>,
+    options: DownloadOptions,
+    onOptionsChange: (DownloadOptions) -> Unit,
+    /** Where audio and video are saved; the set shows the one for its current kind. */
+    saveDirs: SaveDirs,
+    /** Each is given the kind in question: true for video. */
+    onPickSaveDir: (isVideo: Boolean, card: SdCard?) -> Unit,
+    onResetSaveDir: (isVideo: Boolean) -> Unit,
+    onResolveFormats: (MediaInfo) -> Unit,
+    /** Links whose formats are being read right now. */
+    readingUrls: Set<String> = emptySet(),
+    /** The one link the set was read from, such as a playlist, which the link button opens. */
+    sourceUrl: String? = null,
+    /** Reads these links' formats again, with the given reader or the setting's. */
+    onRefreshFormats: (List<MediaInfo>, ListingSource?, Boolean) -> Unit = { _, _, _ -> },
+    onRemove: (MediaInfo) -> Unit,
+    onDownload: (List<DownloadPlan>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Opened at full height: the list of links and the controls under it do not fit in a
+    // half sheet, and a partly open sheet would hide the download action.
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded))
+
+    val state = rememberBatchDownloadState(results)
+    // The set starts from the download settings, and follows them if they change.
+    LaunchedEffect(
+        options.videoQuality, options.preferredVideoCodec,
+        options.preferredAudioLanguage, options.preferredAudioCodec
+    ) {
+        state.applyPreferences(options)
+    }
+    // Kept apart from the rest, so a later change of settings does not move the tab back.
+    LaunchedEffect(options.sheetOpensOnAudio) {
+        state.setDownloadType(!options.sheetOpensOnAudio)
+    }
+    var openSheet by remember { mutableStateOf(BatchSheet.NONE) }
+    var listMenuOpen by remember { mutableStateOf(false) }
+
+    // The link whose own sheet is open, held by url so the row keeps up with the formats
+    // arriving for it rather than showing whatever it had when it was tapped.
+    var focusedUrl by remember { mutableStateOf<String?>(null) }
+    val focused = results.firstOrNull { it.url == focusedUrl }
+
+    val plans = state.plans
+    val totalBytes = state.totalBytes
+
+    // ── Search ──
+    //
+    // The list narrowed to what matches, worked out once per query rather than per row.
+    // Closing the search clears it, so the whole set is back the moment the field goes.
+    var searchOpen by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    val shown = remember(results, query) {
+        val q = query.trim()
+        if (q.isEmpty()) results else results.filter { it.matches(q) }
+    }
+    val closeSearch = {
+        query = ""
+        searchOpen = false
+    }
+    val focusManager = LocalFocusManager.current
+    // Where the field and the sheet are on screen, read only when a touch lands, so knowing
+    // them costs nothing while nothing is touched.
+    val bounds = remember { SearchBounds() }
+
+    // The Adjust section, closed when the sheet opens so the list has the height.
+    var adjustOpen by rememberSaveable { mutableStateOf(false) }
+
+    // The last message from the footer, shown over the top of the sheet.
+    var feedback by remember { mutableStateOf<BatchFeedback?>(null) }
+    var shownFeedback by remember { mutableStateOf("") }
+    LaunchedEffect(feedback) {
+        val current = feedback ?: return@LaunchedEffect
+        shownFeedback = current.message
+        delay(FEEDBACK_MS)
+        feedback = null
+    }
+
+    // The link dialog, kept out here and composed beside the sheet rather than inside it,
+    // so closing it never leaves the sheet ignoring touches.
+    var linkDialogOpen by remember { mutableStateOf(false) }
+    // A swiped row's "remove?" question, kept here for the same reason.
+    var pendingRemove by remember { mutableStateOf<MediaInfo?>(null) }
+    val links = remember(results) { results.map { it.url } }
+    val linkSource = sourceUrl?.trim()?.takeIf { it.startsWith("http") && it.none(Char::isWhitespace) }
+
+    // A phone on its side is wide and short. Stacked there, the heading, the Adjust section
+    // and the buttons took the height and left the list one row, so the sheet takes the
+    // screen's width and splits into two panes. Upright, and on a tablet, it is stacked.
+    val configuration = LocalConfiguration.current
+    val twoPane = configuration.screenWidthDp >= TWO_PANE_MIN_WIDTH_DP &&
+        configuration.screenHeightDp < TWO_PANE_MAX_HEIGHT_DP
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = sheetBlackColor,
+        sheetMaxWidth = if (twoPane) Dp.Unspecified else BottomSheetDefaults.SheetMaxWidth
+    ) {
+        Box(
+            // A touch outside the search field ends the search: with nothing typed it
+            // closes, and with a query it only puts the keyboard away so the narrowed list
+            // can be used.
+            modifier = Modifier
+                .endsSearchOnTouchOutside(searchOpen, bounds) {
+                    if (query.isBlank()) closeSearch() else focusManager.clearFocus()
+                }
+        ) {
+        KeyboardOverSheet()
+
+        // The sheet's parts, each written once and placed by the layout below: stacked, or
+        // side by side on a phone held sideways.
+
+        // ── Header ──
+        val titleBlock: @Composable (Modifier) -> Unit = { modifier ->
+            Column(modifier = modifier) {
+                Text(
+                    stringResource(R.string.batch_header_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.batch_header_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        val downloadButton: @Composable (Modifier) -> Unit = { modifier ->
+            BatchDownloadButton(enabled = plans.isNotEmpty(), onClick = { onDownload(plans) }, modifier = modifier)
+        }
+
+        // ── What the list holds, and the controls that act on the list itself ──
+        val listBar: @Composable () -> Unit = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(start = SIDE, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (searchOpen) {
+                    LinkSearchField(
+                        query = query,
+                        onQueryChange = { query = it },
+                        onClose = closeSearch,
+                        modifier = Modifier
+                            .weight(1f)
+                            .onGloballyPositioned { bounds.field = it }
+                    )
+                } else {
+                    Text(
+                        if (state.selectionMode) {
+                            pluralStringResource(
+                                R.plurals.batch_selected,
+                                state.selected.size,
+                                state.selected.size
+                            )
+                        } else {
+                            pluralStringResource(R.plurals.batch_links, results.size, results.size)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (totalBytes > 0) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        // What Download will fetch added up: the ticked links, or the whole
+                        // set when none are ticked. A link whose
+                        // formats have not been read yet reports no size, so while any are
+                        // outstanding the figure is marked as a floor rather than the total.
+                        Text(
+                            "~ ${formatFileSize(totalBytes)}" +
+                                    if (state.allSizesKnown) "" else " +",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    ShapeIconButton(onClick = { searchOpen = true }) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = stringResource(R.string.batch_search_open),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+                ShapeIconButton(
+                    onClick = {
+                        if (state.selectionMode) state.endSelection() else state.startSelection()
+                    },
+                    active = state.selectionMode
+                ) {
+                    Icon(
+                        Icons.Filled.SelectAll,
+                        contentDescription = stringResource(
+                            if (state.selectionMode) R.string.batch_stop_selecting
+                            else R.string.batch_start_selecting
+                        ),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+                Box {
+                    ShapeIconButton(onClick = { listMenuOpen = true }) {
+                        Icon(
+                            painterResource(R.drawable.ic_more_vert),
+                            contentDescription = stringResource(R.string.batch_list_options),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = listMenuOpen,
+                        onDismissRequest = { listMenuOpen = false }
+                    ) {
+                        if (!state.selectionMode) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.batch_menu_select_links)) },
+                                icon = Icons.Filled.Checklist,
+                                tone = MenuTone.Accent,
+                                onClick = {
+                                    listMenuOpen = false
+                                    state.startSelection()
+                                }
+                            )
+                        } else {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.batch_menu_select_all)) },
+                                icon = Icons.Filled.SelectAll,
+                                tone = MenuTone.Accent,
+                                onClick = {
+                                    listMenuOpen = false
+                                    state.selectAll()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.batch_menu_invert)) },
+                                icon = Icons.Filled.SwapVert,
+                                tone = MenuTone.Info,
+                                onClick = {
+                                    listMenuOpen = false
+                                    state.invertSelection()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.batch_menu_remove_selected)) },
+                                icon = Icons.Filled.Delete,
+                                tone = MenuTone.Danger,
+                                enabled = state.selected.isNotEmpty(),
+                                onClick = {
+                                    listMenuOpen = false
+                                    results.filter { it.url in state.selected }.forEach(onRemove)
+                                    state.endSelection()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.batch_menu_done)) },
+                                icon = Icons.Filled.Done,
+                                tone = MenuTone.Neutral,
+                                onClick = {
+                                    listMenuOpen = false
+                                    state.endSelection()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── The links ──
+        val linkListState = rememberLazyListState()
+        val shrink = rememberScrollShrink()
+        // A new query starts at the top of what it found.
+        LaunchedEffect(query) { if (query.isNotEmpty()) linkListState.scrollToItem(0) }
+        val linkList: @Composable (Modifier) -> Unit = { modifier ->
+            if (searchOpen && shown.isEmpty()) {
+                Text(
+                    stringResource(R.string.batch_search_none),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = SIDE + 4.dp, vertical = 16.dp)
+                )
+            }
+
+            LazyColumn(
+                state = linkListState,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .keepFlingInSheet()
+                    .nestedScroll(shrink),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = SIDE
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(shown, key = { info -> info.url }) { info ->
+                    val format = state.formatOf(info)
+                    Box(modifier = Modifier.scrollShrink(shrink)) {
+                    BatchDownloadCard(
+                        info = info,
+                        formatLabel = format?.shortLabel.orEmpty(),
+                        sizeLabel = format?.sizeLabelWith(info.mergeAudioFor(state.languageOf(info))).orEmpty(),
+                        isVideo = state.isVideo(info),
+                        isAdjusted = state.isAdjusted(info),
+                        selectionMode = state.selectionMode,
+                        checked = info.url in state.selected,
+                        onClick = {
+                            if (state.selectionMode) {
+                                state.toggle(info)
+                            } else {
+                                // A link that came from a listing has no formats yet, so
+                                // the read is started as the sheet opens and the list
+                                // fills in under it.
+                                onResolveFormats(info)
+                                focusedUrl = info.url
+                            }
+                        },
+                        onLongClick = {
+                            if (state.selectionMode) state.toggle(info)
+                            else state.startSelection(info)
+                        },
+                        onTypeClick = {
+                            focusedUrl = info.url
+                            openSheet = BatchSheet.ITEM_TYPE
+                        },
+                        removeAsked = pendingRemove?.url == info.url,
+                        onAskRemove = { pendingRemove = info }
+                    )
+                    }
+                }
+            }
+        }
+
+        // ── Adjust: the options and the container, for the whole set ──
+        //
+        // Each opens the dialog the single download sheet uses, so there is one place
+        // where each of them is explained. Subtitles are left out of an audio download,
+        // which has nothing to attach them to, and the bitrate only applies to one.
+        val adjustSection: @Composable () -> Unit = {
+            val isVideo = state.videoTab
+            val thumbnailLabel = stringResource(R.string.batch_bar_thumbnail)
+            val chaptersLabel = stringResource(R.string.batch_bar_chapters)
+            val subtitlesLabel = stringResource(R.string.batch_bar_subtitles)
+            val bitrateLabel = stringResource(R.string.properties_bitrate)
+            val sponsorBlockLabel = stringResource(R.string.batch_bar_sponsorblock)
+            val filenameLabel = stringResource(R.string.batch_bar_filename_template)
+            val showAudioLanguage = state.audioLanguages.size > 1
+            val audioLanguageLabel = state.audioLanguage?.let(::languageLabel)
+                ?: stringResource(R.string.direct_share_audio_language_default)
+
+            val thumbnailOn = options.thumbnailBadge > 0
+            val chaptersOn = options.chapterBadge(isVideo) > 0
+            val subtitlesOn = isVideo && options.subtitleBadge > 0
+            val bitrateOn = !isVideo && options.audioQuality.isNotBlank()
+            val sponsorBlockOn = options.sponsorBlockBadge > 0
+            val filenameOn = options.filenameTemplate.isNotBlank()
+            val languageOn = showAudioLanguage && state.audioLanguage != null
+            val cookiesLabel = stringResource(R.string.cookies_title)
+            val cookiesOn = rememberUseCookies()
+
+            val container = if (isVideo) options.videoContainer else options.audioContainer
+            val containerLabel = container.ifBlank { "Default" }
+
+            Box(modifier = Modifier.padding(horizontal = SIDE)) {
+                SheetSection(
+                    icon = Icons.Outlined.Tune,
+                    iconPill = true,
+                    title = if (isVideo) stringResource(R.string.format_sheet_adjust_video)
+                    else stringResource(R.string.format_sheet_adjust_audio),
+                    summary = listOfNotNull(
+                        thumbnailLabel.takeIf { thumbnailOn },
+                        chaptersLabel.takeIf { chaptersOn },
+                        subtitlesLabel.takeIf { subtitlesOn },
+                        bitrateLabel.takeIf { bitrateOn },
+                        audioLanguageLabel.takeIf { languageOn },
+                        sponsorBlockLabel.takeIf { sponsorBlockOn },
+                        filenameLabel.takeIf { filenameOn },
+                        cookiesLabel.takeIf { cookiesOn }
+                    ).plus(containerLabel).joinToString(", "),
+                    expanded = adjustOpen,
+                    onToggle = { adjustOpen = !adjustOpen },
+                    color = sheetRaisedColor
+                ) {
+                    // Wraps rather than scrolling sideways: a chip past the edge is a
+                    // setting nobody can see. The chips are a little trimmed so more of
+                    // them share a line, and a long name is cut short rather than wrapped.
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // The container is a chip like the rest, naming what it is set to,
+                        // and opens the same container sheet as before.
+                        OptionChip(
+                            label = "${stringResource(R.string.batch_bar_container)} · $containerLabel",
+                            icon = Icons.Filled.Description,
+                            active = container.isNotBlank(),
+                            compact = true,
+                            onClick = { openSheet = BatchSheet.CONTAINER }
+                        )
+                        OptionChip(
+                            label = thumbnailLabel,
+                            compact = true,
+                            icon = Icons.Filled.Image,
+                            active = thumbnailOn,
+                            onClick = { openSheet = BatchSheet.THUMBNAIL }
+                        )
+                        OptionChip(
+                            label = chaptersLabel,
+                            compact = true,
+                            icon = Icons.Filled.Book,
+                            active = chaptersOn,
+                            onClick = { openSheet = BatchSheet.CHAPTERS }
+                        )
+                        if (isVideo) {
+                            OptionChip(
+                                label = subtitlesLabel,
+                                compact = true,
+                                icon = Icons.Filled.ClosedCaption,
+                                active = subtitlesOn,
+                                onClick = { openSheet = BatchSheet.SUBTITLES }
+                            )
+                        } else {
+                            OptionChip(
+                                label = bitrateLabel,
+                                compact = true,
+                                icon = Icons.Filled.GraphicEq,
+                                active = bitrateOn,
+                                onClick = { openSheet = BatchSheet.BITRATE }
+                            )
+                        }
+                        // Only the sets holding a source with several soundtracks have this.
+                        if (showAudioLanguage) {
+                            OptionChip(
+                                label = audioLanguageLabel,
+                                compact = true,
+                                icon = Icons.Filled.Translate,
+                                active = languageOn,
+                                onClick = { openSheet = BatchSheet.AUDIO_LANGUAGE }
+                            )
+                        }
+                        OptionChip(
+                            label = sponsorBlockLabel,
+                            compact = true,
+                            icon = Icons.Filled.Paid,
+                            active = sponsorBlockOn,
+                            onClick = { openSheet = BatchSheet.SPONSORBLOCK }
+                        )
+                        OptionChip(
+                            label = filenameLabel,
+                            compact = true,
+                            icon = Icons.Filled.Edit,
+                            active = filenameOn,
+                            onClick = { openSheet = BatchSheet.FILENAME }
+                        )
+                        OptionChip(
+                            label = cookiesLabel,
+                            compact = true,
+                            icon = Icons.Filled.Cookie,
+                            active = cookiesOn,
+                            onClick = { openSheet = BatchSheet.COOKIES }
+                        )
+                    }
+                }
+            }
+        }
+
+        // ── Kind, quality and folder, with the link and incognito at the end ──
+        val actionBar: @Composable () -> Unit = {
+            val audioChoice = state.audioChoice
+            val hqLabel = when {
+                state.videoTab && state.maxHeight == WORST_HEIGHT -> stringResource(R.string.batch_bar_hq_value, "MIN")
+                state.videoTab && state.maxHeight <= 0 -> stringResource(R.string.batch_bar_hq_auto)
+                state.videoTab -> stringResource(R.string.batch_bar_hq_value, "${state.maxHeight}p")
+                audioChoice == null -> stringResource(R.string.batch_bar_hq_best)
+                else -> stringResource(R.string.batch_bar_hq_value, audioChoice.badgeText)
+            }
+
+            val qualityLabel = when {
+                state.videoTab -> stringResource(qualityLabelFor(state.maxHeight))
+                audioChoice == null -> stringResource(R.string.audio_quality_best)
+                else -> audioChoice.label
+            }
+
+            BatchActionBar(
+                isVideo = state.videoTab,
+                qualityLabel = qualityLabel,
+                hqLabel = hqLabel,
+                onDownloadType = { openSheet = BatchSheet.TYPE },
+                onQuality = {
+                    // The ladder answers at once; reading every link first is left to the
+                    // sheet's update button, for the user who wants their exact formats.
+                    openSheet = if (state.videoTab) BatchSheet.QUALITY else BatchSheet.AUDIO_FORMAT
+                },
+                onSaveDir = { openSheet = BatchSheet.SAVE_DIR },
+                // The link button copies the set's addresses, or offers to open the one link
+                // a set of one holds; incognito applies to the run.
+                linksEnabled = links.isNotEmpty(),
+                onLinks = { linkDialogOpen = true },
+                onFeedback = { message -> feedback = BatchFeedback(message) },
+                modifier = Modifier.padding(horizontal = SIDE)
+            )
+        }
+
+        if (twoPane) {
+            // The list down one side, as tall as the sheet; the heading, the settings and
+            // the buttons down the other, scrolling if a large font makes them taller than
+            // the screen, with Download kept in view under them.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    listBar()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    linkList(Modifier.weight(1f))
+                    Spacer(modifier = Modifier.navigationBarsPadding().height(12.dp))
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        titleBlock(Modifier.padding(horizontal = SIDE))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        adjustSection()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        actionBar()
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    downloadButton(
+                        Modifier
+                            .padding(horizontal = SIDE)
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    )
+                    Spacer(modifier = Modifier.navigationBarsPadding().height(12.dp))
+                }
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // The button moves under the heading only where a word of it would otherwise break.
+                SheetHeaderLayout(modifier = Modifier.padding(horizontal = SIDE)) {
+                    titleBlock(Modifier)
+                    downloadButton(Modifier.height(44.dp))
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                listBar()
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // A phone shows a few links and leaves the rest of the sheet to the options; a
+                // tablet has the height for many more, and holding it to the phone's few left a
+                // tall sheet scrolling a short strip.
+                val listMaxHeight = if (configuration.smallestScreenWidthDp >= 600) {
+                    maxOf((configuration.screenHeightDp * 0.45f).dp, 280.dp)
+                } else {
+                    280.dp
+                }
+                // While searching, the list keeps its full height however few links match, so
+                // the sheet does not shrink and drop the search field behind the keyboard.
+                linkList(
+                    Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(min = if (searchOpen) listMaxHeight else 0.dp, max = listMaxHeight)
+                        .testTag(BATCH_LINK_LIST_TAG)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                adjustSection()
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                actionBar()
+
+                Spacer(modifier = Modifier.navigationBarsPadding().height(12.dp))
+            }
+        }
+
+        // What the footer's buttons did, shown over the top of the sheet, where it is in
+        // view however far down the footer sits.
+        androidx.compose.animation.AnimatedVisibility(
+            visible = feedback != null,
+            enter = fadeIn() + scaleIn(initialScale = 0.9f),
+            exit = fadeOut() + scaleOut(targetScale = 0.9f),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = SIDE)
+        ) {
+            FeedbackToast(shownFeedback)
+        }
+        }
+    }
+
+    // Given several links, Copy takes all of them and Open is left out; the one link the
+    // set was read from, such as a playlist, is shown, copied and opened instead.
+    if (linkDialogOpen) {
+        LinkOptionsDialog(
+            links = linkSource?.let { listOf(it) } ?: links,
+            onFeedback = { message -> feedback = BatchFeedback(message) },
+            onDismiss = { linkDialogOpen = false }
+        )
+    }
+
+    pendingRemove?.let { info ->
+        val keep = { pendingRemove = null }
+        AlertDialog(
+            onDismissRequest = keep,
+            title = { Text(stringResource(R.string.batch_remove_title), fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    stringResource(R.string.batch_remove_body, info.title),
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            confirmButton = {
+                FlatChip(
+                    label = stringResource(R.string.batch_card_remove),
+                    selected = true,
+                    onClick = {
+                        pendingRemove = null
+                        onRemove(info)
+                    }
+                )
+            },
+            dismissButton = {
+                FlatChip(label = stringResource(R.string.options_text_input_cancel), onClick = keep)
+            }
+        )
+    }
+
+    // ── The link's own sheet, which is what tapping a row opens ──
+    //
+    // It is the single download sheet, not a second version of it: the same tabs, fields
+    // and quality row, with its action handing the choice back to the set instead of
+    // starting a download of its own.
+    if (focused != null && openSheet == BatchSheet.NONE) {
+        FormatSheet(
+            info = focused,
+            options = options,
+            onOptionsChange = onOptionsChange,
+            saveDirs = saveDirs,
+            isLoadingFormats = focused.url in readingUrls,
+            onRefreshFormats = { source, fresh -> onRefreshFormats(listOf(focused), source, fresh) },
+            initialFormat = state.formatOf(focused),
+            initialAudioLanguage = state.languageOf(focused),
+            confirmAsApply = true,
+            onPickSaveDir = onPickSaveDir,
+            onResetSaveDir = onResetSaveDir,
+            onDownload = { format, audioLanguage, title, author, _ ->
+                state.setChoice(focused, format, title, author, audioLanguage)
+                focusedUrl = null
+            },
+            onDismiss = { focusedUrl = null }
+        )
+    }
+
+    val appContext = LocalContext.current.applicationContext
+    when (openSheet) {
+        BatchSheet.NONE -> Unit
+
+        BatchSheet.TYPE -> BatchDownloadTypeSheet(
+            isVideo = state.videoTab,
+            onSelect = {
+                state.setDownloadType(it)
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        // The same choice as above, aimed at one link instead of the set.
+        BatchSheet.ITEM_TYPE -> {
+            val info = focused
+            if (info == null) {
+                openSheet = BatchSheet.NONE
+            } else {
+                BatchDownloadTypeSheet(
+                    isVideo = state.isVideo(info),
+                    onSelect = { isVideo ->
+                        state.defaultFor(info, isVideo)?.let { state.setFormat(info, it) }
+                        openSheet = BatchSheet.NONE
+                        focusedUrl = null
+                    },
+                    onDismiss = {
+                        openSheet = BatchSheet.NONE
+                        focusedUrl = null
+                    }
+                )
+            }
+        }
+
+        // Every soundtrack the set offers, applied to whatever the buttons are aimed at.
+        BatchSheet.AUDIO_LANGUAGE -> AudioLanguageSheet(
+            languages = state.audioLanguages,
+            selected = state.audioLanguage,
+            onPick = {
+                state.applyAudioLanguage(it)
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        // The same ladder a link offers before it is read, in the same format list, so a
+        // ceiling for the set and a step for one link look and read alike.
+        BatchSheet.QUALITY -> {
+            val bestLabel = stringResource(R.string.batch_quality_best)
+            val worstLabel = stringResource(R.string.batch_quality_worst)
+            val ladder = remember(bestLabel, worstLabel) {
+                GenericFormats.videoLadder(bestLabel, worstLabel)
+            }
+            FormatSelectionSheet(
+                info = remember(ladder) { ladderAsInfo(ladder) },
+                selected = ladder.firstOrNull { GenericFormats.ceilingOf(it) == state.maxHeight },
+                onConfirm = { step ->
+                    state.setQualityCeiling(GenericFormats.ceilingOf(step))
+                    openSheet = BatchSheet.NONE
+                },
+                onDismiss = { openSheet = BatchSheet.NONE }
+            )
+        }
+
+        // The same format list a single link opens, holding what the targeted links share.
+        BatchSheet.AUDIO_FORMAT -> {
+            val targets = state.targets
+            val bestLabel = stringResource(R.string.audio_quality_best)
+            val worstLabel = stringResource(R.string.batch_quality_worst)
+            val choices = remember(targets, bestLabel, worstLabel) {
+                BatchAudioFormats.choices(targets, bestLabel, worstLabel)
+            }
+            FormatSelectionSheet(
+                info = remember(choices) { choicesAsInfo(choices) },
+                selected = currentAudioChoice(state, choices),
+                onConfirm = { choice ->
+                    state.chooseAudio(
+                        choice.takeUnless { it.formatId == BatchAudioFormats.BEST.formatId }
+                    )
+                    openSheet = BatchSheet.NONE
+                },
+                onDismiss = { openSheet = BatchSheet.NONE },
+                audioFirst = true,
+                isLoadingFormats = targets.any { it.url in readingUrls },
+                onRefresh = { source, fresh -> onRefreshFormats(targets, source, fresh) },
+                linkUrls = remember(targets) { targets.map { it.url } },
+                canChooseSource = remember(targets) {
+                    targets.isNotEmpty() && targets.all { NewPipeEngine.handlesStream(it.url) }
+                }
+            )
+        }
+
+        BatchSheet.BITRATE -> BatchBitrateSheet(
+            currentQuality = options.audioQuality,
+            onSelect = { choice ->
+                onOptionsChange(options.copy(audioQuality = choice))
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.CONTAINER -> ContainerDialog(
+            isVideo = state.videoTab,
+            current = if (state.videoTab) options.videoContainer else options.audioContainer,
+            onSelect = { choice ->
+                onOptionsChange(
+                    if (state.videoTab) options.copy(videoContainer = choice)
+                    else options.copy(audioContainer = choice)
+                )
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        // Sign-ins are kept per site; a set from one playlist is one site, so its first link
+        // stands for where to sign in.
+        BatchSheet.COOKIES -> CookiesDialog(
+            url = results.firstOrNull()?.url.orEmpty(),
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.SAVE_DIR -> SaveLocationScreen(
+            isVideo = state.videoTab,
+            saveDir = saveDirs.of(state.videoTab),
+            label = saveDirs.labelOf(state.videoTab),
+            onPick = { card ->
+                openSheet = BatchSheet.NONE
+                onPickSaveDir(state.videoTab, card)
+            },
+            onReset = {
+                openSheet = BatchSheet.NONE
+                onResetSaveDir(state.videoTab)
+            },
+            onUseRecent = { SettingsRepository.setSaveDir(appContext, state.videoTab, it.uri, it.label) },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        // The remaining settings each open the dialog the single download sheet uses, so
+        // there is one place where each of them is explained.
+        BatchSheet.THUMBNAIL -> ThumbnailDialog(
+            options = options,
+            onChange = onOptionsChange,
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.CHAPTERS -> ChaptersDialog(
+            options = options,
+            isVideo = state.videoTab,
+            onChange = onOptionsChange,
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.SUBTITLES -> SubtitlesDialog(
+            options = options,
+            onChange = onOptionsChange,
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.SPONSORBLOCK -> SponsorBlockDialog(
+            options = options,
+            onConfirm = {
+                onOptionsChange(it)
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+
+        BatchSheet.FILENAME -> FilenameTemplateSheet(
+            template = options.filenameTemplate,
+            onConfirm = {
+                onOptionsChange(options.copy(filenameTemplate = it))
+                openSheet = BatchSheet.NONE
+            },
+            onDismiss = { openSheet = BatchSheet.NONE }
+        )
+    }
+}
+
+/**
+ * The search field that takes the place of the count while searching: what is typed, and a
+ * close button that clears it and puts the count back. It takes the keyboard as it opens.
+ */
+@Composable
+internal fun LinkSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    hint: String = stringResource(R.string.batch_search_hint)
+) {
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    Surface(
+        modifier = modifier.height(42.dp),
+        shape = RoundedCornerShape(21.dp),
+        color = sheetButtonColor
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Filled.Search,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (query.isEmpty()) {
+                    Text(
+                        hint,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium
+                        .copy(color = MaterialTheme.colorScheme.onSurface),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                )
+            }
+            IconButton(onClick = onClose) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.batch_search_close),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Lets the keyboard open over the sheet rather than lifting it.
+ *
+ * The bottom sheet pads its whole window by the keyboard's height, which pushed the list,
+ * the Adjust section and the buttons up into a strip above the keys while searching. The
+ * search field is at the top, where the keyboard never reaches, so the keyboard's height is
+ * taken out of what the sheet's own view is told, and the keyboard simply covers the lower
+ * part of the sheet until it is put away. Only this sheet's window is affected, and the
+ * listeners are removed when the sheet goes.
+ */
+@Composable
+internal fun KeyboardOverSheet() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val host = view.parent as? View ?: return@DisposableEffect onDispose { }
+        ViewCompat.setOnApplyWindowInsetsListener(host) { v, insets ->
+            val withoutKeyboard = WindowInsetsCompat.Builder(insets)
+                .setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE)
+                .build()
+            ViewCompat.onApplyWindowInsets(v, withoutKeyboard)
+        }
+        // The keyboard's own slide is not passed on either, so nothing moves while it opens.
+        ViewCompat.setWindowInsetsAnimationCallback(
+            host,
+            object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+                override fun onProgress(
+                    insets: WindowInsetsCompat,
+                    runningAnimations: MutableList<WindowInsetsAnimationCompat>
+                ): WindowInsetsCompat = insets
+            }
+        )
+        ViewCompat.requestApplyInsets(host)
+        onDispose {
+            ViewCompat.setOnApplyWindowInsetsListener(host, null)
+            ViewCompat.setWindowInsetsAnimationCallback(host, null)
+        }
+    }
+}
+
+/**
+ * A touch anywhere outside the search field ends the search through [onOutside]. Watched on
+ * the way down, before the touch reaches whatever it lands on, so a tap on a row still opens
+ * the row. Where the field and the sheet are is read only when a touch lands.
+ */
+internal fun Modifier.endsSearchOnTouchOutside(searchOpen: Boolean, bounds: SearchBounds, onOutside: () -> Unit): Modifier =
+    onGloballyPositioned { bounds.sheet = it }
+        .pointerInput(searchOpen) {
+            if (!searchOpen) return@pointerInput
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val sheet = bounds.sheet ?: return@awaitEachGesture
+                val field = bounds.field?.takeIf { it.isAttached } ?: return@awaitEachGesture
+                if (!field.boundsInRoot().contains(sheet.localToRoot(down.position))) onOutside()
+            }
+        }
+
+/** The set's Download: a tonal accent button, quieter than the single sheet's pill. */
+@Composable
+internal fun BatchDownloadButton(enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 0.15f else 0.06f),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp),
+            // Centred when the button is given a width of its own, beside the list.
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Download, null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                stringResource(R.string.batch_download_action),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+/** Whether a link's title, channel or address holds [query], ignoring case. */
+private fun MediaInfo.matches(query: String): Boolean =
+    title.contains(query, ignoreCase = true) ||
+        uploader.contains(query, ignoreCase = true) ||
+        url.contains(query, ignoreCase = true)
+
+/** Where the sheet and its search field were last laid out, read when a touch lands. */
+internal class SearchBounds {
+    var sheet: LayoutCoordinates? = null
+    var field: LayoutCoordinates? = null
+}
+
+/** How far the sheet's content sits from its sides: close to the edge, so the list gets the width. */
+internal val BATCH_SIDE = 12.dp
+private val SIDE = BATCH_SIDE
+
+/**
+ * A window at least this wide and under [TWO_PANE_MAX_HEIGHT_DP] tall is a phone on its
+ * side, where the sheet splits into two panes. Each pane is then about as wide as an
+ * upright phone, so its rows lay out as they do there.
+ */
+internal const val TWO_PANE_MIN_WIDTH_DP = 600
+internal const val BATCH_LINK_LIST_TAG = "batch_link_list"
+internal const val TWO_PANE_MAX_HEIGHT_DP = 480
+
+/** One message from the footer; a new one for every tap, so a repeat starts its time over. */
+private class BatchFeedback(val message: String)
+
+/** Which sheet the buttons or a row's type button has opened, if any. */
+private enum class BatchSheet {
+    NONE, TYPE, ITEM_TYPE, QUALITY, AUDIO_FORMAT, BITRATE, CONTAINER, SAVE_DIR, AUDIO_LANGUAGE,
+    THUMBNAIL, CHAPTERS, SUBTITLES, SPONSORBLOCK, FILENAME, COOKIES
+}
+
+/** The row among [choices] that stands for the set's current audio choice. */
+private fun currentAudioChoice(
+    state: BatchDownloadState,
+    choices: List<MediaFormat>
+): MediaFormat? {
+    val id = state.audioChoice?.formatId ?: BatchAudioFormats.BEST.formatId
+    return choices.firstOrNull { it.formatId == id }
+}
+
+/** The video ladder in the shape the format list reads. */
+private fun ladderAsInfo(ladder: List<MediaFormat>) = MediaInfo(
+    url = "",
+    title = "",
+    uploader = "",
+    thumbnail = null,
+    durationSeconds = 0,
+    videoFormats = ladder,
+    audioFormats = emptyList()
+)
+
+/** The shared formats in the shape the format list reads. */
+private fun choicesAsInfo(choices: List<MediaFormat>) = MediaInfo(
+    url = "",
+    title = "",
+    uploader = "",
+    thumbnail = null,
+    durationSeconds = 0,
+    videoFormats = emptyList(),
+    audioFormats = choices
+)
+
+/** Short text for a format on the quality button, such as "OPUS 128K". */
+private val MediaFormat.badgeText: String
+    get() {
+        if (isGeneric) return label.uppercase()
+        val codec = codecLabel.ifBlank { displayContainer }
+        val kbps = bitrateKbps.roundToInt()
+        return if (kbps > 0) "$codec ${kbps}K" else codec
+    }

@@ -44,7 +44,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-KOTLIN = os.path.join(ROOT, "app/src/main/java/com/hazel/android")
+KOTLIN = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter")
 VIEW_MODEL = os.path.join(KOTLIN, "download/DownloadViewModel.kt")
 SETTINGS = os.path.join(KOTLIN, "data/SettingsRepository.kt")
 PROCESSING = os.path.join(KOTLIN, "ui/screens/more/ProcessingScreen.kt")

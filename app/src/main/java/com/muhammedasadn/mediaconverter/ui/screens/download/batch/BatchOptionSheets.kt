@@ -1,0 +1,299 @@
+package com.muhammedasadn.mediaconverter.ui.screens.download.batch
+
+import com.muhammedasadn.mediaconverter.ui.theme.sheetRaisedColor
+import com.muhammedasadn.mediaconverter.ui.theme.sheetBlackColor
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.runtime.remember
+import androidx.compose.material3.SheetState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import com.muhammedasadn.mediaconverter.ui.components.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.runtime.Composable
+import androidx.annotation.StringRes
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.muhammedasadn.mediaconverter.R
+import com.muhammedasadn.mediaconverter.download.AUDIO_CONTAINERS
+import com.muhammedasadn.mediaconverter.download.AUDIO_QUALITY_STEPS
+import com.muhammedasadn.mediaconverter.download.VIDEO_CONTAINERS
+import com.muhammedasadn.mediaconverter.ui.screens.more.SingleChoiceDialog
+import com.muhammedasadn.mediaconverter.download.WORST_HEIGHT
+import com.muhammedasadn.mediaconverter.ui.components.keepFlingInSheet
+
+/**
+ * The heights the action bar offers, paired with what each is called.
+ *
+ * A height is a ceiling rather than a request for that exact resolution: a set of links
+ * does not all offer the same ladder, and asking every one of them for a size only some
+ * publish would leave the rest with nothing. Each link resolves the ceiling against its
+ * own formats, which is why the rows can end up showing different numbers from each other.
+ */
+val BATCH_QUALITY_STEPS: List<Pair<Int, Int>> = listOf(
+    0 to R.string.batch_quality_best,
+    2160 to R.string.batch_quality_2160,
+    1440 to R.string.batch_quality_1440,
+    1080 to R.string.batch_quality_1080,
+    720 to R.string.batch_quality_720,
+    480 to R.string.batch_quality_480,
+    360 to R.string.batch_quality_360,
+    240 to R.string.batch_quality_240,
+    144 to R.string.batch_quality_144,
+    WORST_HEIGHT to R.string.batch_quality_worst
+)
+
+/**
+ * The action bar's label for the current ceiling, as a resource id rather than as text.
+ * This list is a top level value, built before there is a context to read strings with, so
+ * the name is resolved where it is shown instead.
+ */
+@StringRes
+fun qualityLabelFor(maxHeight: Int): Int =
+    BATCH_QUALITY_STEPS.firstOrNull { it.first == maxHeight }?.second
+        ?: R.string.batch_quality_best
+
+/** Audio or video, for the whole set or for one link. */
+@Composable
+fun BatchDownloadTypeSheet(
+    isVideo: Boolean,
+    onSelect: (Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ChoiceSheet(
+        title = stringResource(R.string.batch_type_sheet_title),
+        subtitle = stringResource(R.string.batch_type_sheet_subtitle),
+        onDismiss = onDismiss
+    ) { close ->
+        ChoiceRow(
+            label = stringResource(R.string.batch_type_audio),
+            icon = Icons.Filled.GraphicEq,
+            selected = !isVideo,
+            onClick = { close { onSelect(false) } }
+        )
+        ChoiceRow(
+            label = stringResource(R.string.batch_type_video),
+            icon = Icons.Filled.Videocam,
+            selected = isVideo,
+            onClick = { close { onSelect(true) } }
+        )
+    }
+}
+
+/** The bitrate an audio conversion in the set is encoded at. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BatchBitrateSheet(
+    currentQuality: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded))
+    val close = rememberCloseThen(sheetState)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = sheetBlackColor
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            SheetHeader(
+                stringResource(R.string.properties_bitrate),
+                stringResource(R.string.batch_audio_quality_subtitle)
+            )
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().keepFlingInSheet(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 20.dp, end = 20.dp, bottom = 32.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(AUDIO_QUALITY_STEPS, key = { it.first }) { (quality, labelRes) ->
+                    ChoiceRow(
+                        label = stringResource(labelRes),
+                        selected = quality == currentQuality,
+                        onClick = { close { onSelect(quality) } }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Output container, the same choice in the single download sheet and the set's sheet. */
+@Composable
+fun ContainerDialog(
+    isVideo: Boolean,
+    current: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val choices = if (isVideo) VIDEO_CONTAINERS else AUDIO_CONTAINERS
+    // "Default" is stored as blank: it means "add no container option".
+    SingleChoiceDialog(
+        title = stringResource(R.string.batch_container_title),
+        choices = choices.map { (if (it == "Default") "" else it) to it },
+        selected = current,
+        onSelect = onSelect,
+        onDismiss = onDismiss
+    )
+}
+
+/**
+ * The shell every one of these sheets shares: a title, a line saying what it covers, and
+ * whatever the sheet is actually offering.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ChoiceSheet(
+    title: String,
+    subtitle: String,
+    onDismiss: () -> Unit,
+    content: @Composable (close: (() -> Unit) -> Unit) -> Unit
+) {
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+    val close = rememberCloseThen(sheetState)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = sheetBlackColor
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            SheetHeader(title, subtitle)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                content(close)
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+/**
+ * Slides a stacked sheet away before its choice runs, so it never leaves mid-animation.
+ * The choice runs even if the slide is cut short, and only once however fast the taps.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun rememberCloseThen(sheetState: SheetState): (() -> Unit) -> Unit {
+    val scope = rememberCoroutineScope()
+    var closing by remember { mutableStateOf(false) }
+    return { action ->
+        if (!closing) {
+            closing = true
+            scope.launch {
+                try {
+                    sheetState.hide()
+                } finally {
+                    action()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SheetHeader(title: String, subtitle: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 12.dp)
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+internal fun ChoiceRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: ImageVector? = null
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        else sheetRaisedColor
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+            }
+            Text(
+                label,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            if (selected) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}

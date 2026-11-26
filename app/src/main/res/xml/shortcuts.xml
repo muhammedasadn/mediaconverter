@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
-    <share-target android:targetClass="com.hazel.android.ui.share.ShareOverlayActivity">
+    <share-target android:targetClass="com.muhammedasadn.mediaconverter.ui.share.ShareOverlayActivity">
         <data android:mimeType="text/plain" />
-        <category android:name="com.hazel.android.category.SHARE_LINK" />
+        <category android:name="com.muhammedasadn.mediaconverter.category.SHARE_LINK" />
     </share-target>
-    <share-target android:targetClass="com.hazel.android.InstantShareActivity">
+    <share-target android:targetClass="com.muhammedasadn.mediaconverter.InstantShareActivity">
         <data android:mimeType="text/plain" />
-        <category android:name="com.hazel.android.category.SHARE_LINK" />
+        <category android:name="com.muhammedasadn.mediaconverter.category.SHARE_LINK" />
     </share-target>
 </shortcuts>

@@ -54,7 +54,7 @@ MENU = ('<button class="icon-btn menu-btn" type="button" aria-label="Menu" aria-
 LINKS = [('whats-new.html', "What's new", 'whats-new'), ('index.html#features', 'Features', 'home'), ('guide.html', 'Guide', 'guide'), ('faq.html', 'FAQ', 'faq'),
          ('changelog.html', 'Changelog', 'changelog'), ('support.html', 'Support', 'support')]
 
-RELEASES = 'https://github.com/SibtainOcn/Hazel/releases/latest'
+RELEASES = 'https://github.com/muhammedasadn/mediaconverter/releases/latest'
 
 SEARCH = ('<button class="search-btn" type="button" data-search aria-label="Search the site" aria-keyshortcuts="/ Control+K">'
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">'
@@ -72,12 +72,12 @@ def nav(active):
     <div class="nav-end">
       {SEARCH}
       {THEME}
-      <a class="icon-btn gh-link" href="https://github.com/SibtainOcn/Hazel" aria-label="Hazel on GitHub">{GITHUB}<span class="gh-stars" data-gh-stars hidden><svg class="gh-star" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"/></svg><span data-gh-stars-n></span></span></a>
+      <a class="icon-btn gh-link" href="https://github.com/muhammedasadn/mediaconverter" aria-label="Hazel on GitHub">{GITHUB}<span class="gh-stars" data-gh-stars hidden><svg class="gh-star" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"/></svg><span data-gh-stars-n></span></span></a>
       <a class="btn btn-primary" href="{RELEASES}">Download</a>
       {MENU}
     </div>
   </div>
-  <nav class="mobile-menu" aria-label="Menu">{''.join(f'<a href="{h}">{t}</a>' for h, t, _ in LINKS)}<a href="https://github.com/SibtainOcn/Hazel">GitHub</a></nav>
+  <nav class="mobile-menu" aria-label="Menu">{''.join(f'<a href="{h}">{t}</a>' for h, t, _ in LINKS)}<a href="https://github.com/muhammedasadn/mediaconverter">GitHub</a></nav>
 </header>'''
 
 
@@ -96,20 +96,20 @@ FOOTER = f'''<footer>
       <div><h4>Help</h4><ul>
         <li><a href="guide.html">Guide</a></li>
         <li><a href="faq.html">FAQ</a></li>
-        <li><a href="https://github.com/SibtainOcn/Hazel/issues">Report a problem</a></li>
+        <li><a href="https://github.com/muhammedasadn/mediaconverter/issues">Report a problem</a></li>
       </ul></div>
       <div><h4>Get it</h4><ul>
         <li><a href="{RELEASES}">GitHub Releases</a></li>
-        <li><a href="https://f-droid.org/packages/com.hazel.android/">F-Droid</a></li>
+        <li><a href="https://f-droid.org/packages/com.muhammedasadn.mediaconverter/">F-Droid</a></li>
         <li><a href="index.html#install">Check your download</a></li>
       </ul></div>
       <div><h4>Project</h4><ul>
-        <li><a href="https://github.com/SibtainOcn/Hazel">Source code</a></li>
-        <li><a href="https://github.com/SibtainOcn/Hazel/blob/main/CONTRIBUTING.md">Contribute</a></li>
-        <li><a href="support.html">Support Hazel</a></li>
+        <li><a href="https://github.com/muhammedasadn/mediaconverter">Source code</a></li>
+        <li><a href="https://github.com/muhammedasadn/mediaconverter/blob/main/CONTRIBUTING.md">Contribute</a></li>
+        <li><a href="support.html">Support Media Converter</a></li>
       </ul></div>
     </div>
-    <div class="legal mono"><span>Free software under GPL-3.0-or-later</span><span>Made by <a class="link" href="https://github.com/SibtainOcn" rel="author">SibtainOcn</a></span></div>
+    <div class="legal mono"><span>Free software under GPL-3.0-or-later</span><span>Maintained by <a class="link" href="https://github.com/muhammedasadn" rel="author">muhammedasadn</a></span></div>
   </div>
 </footer>'''
 
@@ -378,7 +378,7 @@ def stars():
     # Shown until the page fetches the live count, and kept when GitHub can't be reached.
     import urllib.request
     try:
-        with urllib.request.urlopen('https://api.github.com/repos/SibtainOcn/Hazel', timeout=10) as r:
+        with urllib.request.urlopen('https://api.github.com/repos/muhammedasadn/mediaconverter', timeout=10) as r:
             return short_count(json.load(r)['stargazers_count'])
     except Exception:
         return '★'

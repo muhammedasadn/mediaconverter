@@ -146,7 +146,7 @@ jobs:
           mkdir -p artifacts
           find app/build/outputs/apk/github/release -name '*.apk' -exec cp {} artifacts/ \;
           for ABI in universal armeabi-v7a x86 x86_64 arm64-v8a; do
-            APK="artifacts/Hazel-v${{ steps.plan.outputs.version }}-$ABI-nightly.apk"
+            APK="artifacts/MediaConverter-v${{ steps.plan.outputs.version }}-$ABI-nightly.apk"
             if [ ! -f "$APK" ]; then
               echo "::error::The build did not produce $APK. It produced: $(ls artifacts | tr '\n' ' ')"
               exit 1

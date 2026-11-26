@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-VM = REPO_ROOT / "app/src/main/java/com/hazel/android/download/DownloadViewModel.kt"
+VM = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/download/DownloadViewModel.kt"
 
 PASS_COUNT = 0
 FAIL_COUNT = 0
@@ -214,7 +214,7 @@ def test_code():
                and "DownloadQueueRepository.save(app, remaining)" not in run)
     check_true("The save comes before the run lets go",
                run.find("DownloadQueueRepository.saveCurrent(app)") < run.find("val more = synchronized(queue) {"))
-    repo = (REPO_ROOT / "app/src/main/java/com/hazel/android/data/DownloadQueueRepository.kt").read_text(encoding="utf-8")
+    repo = (REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/data/DownloadQueueRepository.kt").read_text(encoding="utf-8")
     save = block(repo, "suspend fun saveCurrent(", 400)
     check_true("saveCurrent asks for the queue inside the write",
                save.find("context.dataStore.edit { prefs ->") < save.find("val items = current()"))

@@ -168,7 +168,7 @@ val hazelChannel: String by lazy {
 }
 
 android {
-    namespace = "com.hazel.android"
+    namespace = "com.muhammedasadn.mediaconverter"
     compileSdk = 37
 
     // ── Release signing, read from the external signing directory ──
@@ -184,7 +184,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.hazel.android"
+        applicationId = "com.muhammedasadn.mediaconverter"
         minSdk = 24
         targetSdk = 35
 
@@ -304,10 +304,10 @@ android {
 // what it is once several of them share a downloads folder. Named instead for the app, the
 // version, the architecture and the channel:
 //
-//   Hazel-v1.0.0-arm64-v8a-stable.apk
-//   Hazel-v1.0.0-universal-stable.apk
-//   Hazel-v1.1.0-beta.1-arm64-v8a-beta.apk
-//   Hazel-v1.0.0-arm64-v8a-debug.apk
+//   MediaConverter-v1.0.0-arm64-v8a-stable.apk
+//   MediaConverter-v1.0.0-universal-stable.apk
+//   MediaConverter-v1.1.0-beta.1-arm64-v8a-beta.apk
+//   MediaConverter-v1.0.0-arm64-v8a-debug.apk
 //
 // The rename goes through VariantOutputImpl because the public VariantOutput carries the
 // ABI filter but not the file name. The cast is safe rather than forced, so a plugin
@@ -327,9 +327,9 @@ androidComponents {
             output.versionCode.set(hazelBaseVersionCode + (abiVersionCodes[abi] ?: 0))
 
             val apkName = if (flavor == "github") {
-                "Hazel-v$hazelVersionName-$abi-$channel.apk"
+                "MediaConverter-v$hazelVersionName-$abi-$channel.apk"
             } else {
-                "Hazel-v$hazelVersionName-$flavor-$abi-$channel.apk"
+                "MediaConverter-v$hazelVersionName-$flavor-$abi-$channel.apk"
             }
 
             (output as? com.android.build.api.variant.impl.VariantOutputImpl)

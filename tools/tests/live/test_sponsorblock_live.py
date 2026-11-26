@@ -34,7 +34,7 @@ import tempfile
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-KOTLIN = os.path.join(ROOT, "app/src/main/java/com/hazel/android/download")
+KOTLIN = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter/download")
 VIEW_MODEL = os.path.join(KOTLIN, "DownloadViewModel.kt")
 OPTIONS = os.path.join(KOTLIN, "DownloadOptions.kt")
 

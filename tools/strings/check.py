@@ -4,7 +4,7 @@ Self-tests for the Hazel string extraction and translation work.
 Pure Python 3, no dependencies. Run it from the repository root.
 
     python tools/strings/check.py resources
-    python tools/strings/check.py file app/src/main/java/com/hazel/android/ui/screens/download/FormatSheet.kt
+    python tools/strings/check.py file app/src/main/java/com/muhammedasadn/mediaconverter/ui/screens/download/FormatSheet.kt
     python tools/strings/check.py progress
     python tools/strings/check.py translations [--strict]
     python tools/strings/check.py all app/src/main/.../FormatSheet.kt
@@ -28,7 +28,7 @@ RES_DIR = ROOT / "app/src/main/res"
 SRC_DIR = ROOT / "app/src/main/java"
 ALLOWLIST = ROOT / "tools/strings/literal-allowlist.txt"
 LOCALES_CONFIG = RES_DIR / "xml/locales_config.xml"
-APP_LOCALE = SRC_DIR / "com/hazel/android/util/AppLocale.kt"
+APP_LOCALE = SRC_DIR / "com/muhammedasadn/mediaconverter/util/AppLocale.kt"
 # A language is offered to people, in the app's picker and in Android's own language
 # settings, only once this much of it is translated. Below it the folder still ships and
 # Android still uses what is there, but nobody is invited to pick a language that is
@@ -469,7 +469,7 @@ def check_progress():
     for f in kt_files():
         rel, hits = literals_in(f, allow)
         if hits:
-            rows.append((rel.replace("app/src/main/java/com/hazel/android/", ""), len(hits)))
+            rows.append((rel.replace("app/src/main/java/com/muhammedasadn/mediaconverter/", ""), len(hits)))
             total += len(hits)
     width = max([len(r[0]) for r in rows], default=10)
     for name, n in sorted(rows, key=lambda r: -r[1]):

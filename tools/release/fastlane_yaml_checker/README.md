@@ -1,6 +1,6 @@
 # Fastlane & F-Droid YAML Checker
 
-Automated verification and linting suite for Android Fastlane metadata and F-Droid recipe files (`com.hazel.android.yml`).
+Automated verification and linting suite for Android Fastlane metadata and F-Droid recipe files (`com.muhammedasadn.mediaconverter.yml`).
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Prevents CI failures in F-Droid Merge Request pipelines (such as `fdroid rewrite
   - **Strict character limit**: Every changelog file must be **<= 500 characters** (F-Droid and Google Play hard limit).
   - **Version Code Synchronization**: Verifies that a changelog exists corresponding to the active `versionCode` in `app/build.gradle.kts`.
 
-### 2. F-Droid Recipe YAML (`com.hazel.android.yml`)
+### 2. F-Droid Recipe YAML (`com.muhammedasadn.mediaconverter.yml`)
 - **Required Top-Level Fields**: Validates presence of `Categories`, `License`, `AuthorName`, `SourceCode`, `IssueTracker`, `Changelog`, `AutoName`, `RepoType`, `Repo`, `Builds`.
 - **Builds Verification**:
   - `versionName`: Semantic version format.
@@ -43,10 +43,10 @@ Run the checker from the repository root:
 python tools/release/fastlane_yaml_checker/checker.py
 
 # Check a specific F-Droid recipe YAML file
-python tools/release/fastlane_yaml_checker/checker.py --yaml fastlane/com.hazel.android.yml
+python tools/release/fastlane_yaml_checker/checker.py --yaml fastlane/com.muhammedasadn.mediaconverter.yml
 
 # Automatically format and fix formatting discrepancies in-place
-python tools/release/fastlane_yaml_checker/checker.py --yaml path/to/com.hazel.android.yml --fix
+python tools/release/fastlane_yaml_checker/checker.py --yaml path/to/com.muhammedasadn.mediaconverter.yml --fix
 
 # Verify reproducible binary download URLs live against GitHub Releases
 python tools/release/fastlane_yaml_checker/checker.py --check-urls

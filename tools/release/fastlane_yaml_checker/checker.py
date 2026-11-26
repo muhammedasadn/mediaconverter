@@ -353,7 +353,7 @@ def check_fdroid_yaml(yaml_path: Path, expected_vname: str, expected_vcode: int,
             passed = False
 
         # binary URL check
-        if not binary or not str(binary).strip().startswith("https://github.com/SibtainOcn/Hazel/releases/download/"):
+        if not binary or not str(binary).strip().startswith("https://github.com/muhammedasadn/mediaconverter/releases/download/"):
             print_fail(f"{desc}: Binary URL '{binary}' does not match expected GitHub release pattern")
             passed = False
 
@@ -475,12 +475,12 @@ def check_fdroid_yaml(yaml_path: Path, expected_vname: str, expected_vcode: int,
 def find_default_yaml_candidates(repo_root: Path) -> list[Path]:
     """Find candidate F-Droid metadata files in repository or active workspace."""
     candidates = [
-        repo_root / "fastlane" / "com.hazel.android.yml",
-        repo_root / "metadata" / "com.hazel.android.yml",
+        repo_root / "fastlane" / "com.muhammedasadn.mediaconverter.yml",
+        repo_root / "metadata" / "com.muhammedasadn.mediaconverter.yml",
     ]
     found = [p for p in candidates if p.exists()]
     # Also discover any local metadata recipe in staging or metadata directories
-    for p in repo_root.glob("**/metadata/com.hazel.android.yml"):
+    for p in repo_root.glob("**/metadata/com.muhammedasadn.mediaconverter.yml"):
         if p not in found:
             found.append(p)
     return found

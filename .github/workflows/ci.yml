@@ -187,7 +187,7 @@ jobs:
       - name: Decide what to build
         id: target
         run: |
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ] && [ -n "$KEYSTORE_BASE64" ]; then
             echo "task=assembleRelease" >> "$GITHUB_OUTPUT"
             echo "variant=release" >> "$GITHUB_OUTPUT"
             echo "split=true" >> "$GITHUB_OUTPUT"
@@ -249,7 +249,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: hazel-${{ steps.target.outputs.variant }}
+          name: mediaconverter-${{ steps.target.outputs.variant }}
           path: ${{ steps.target.outputs.glob }}
           retention-days: 3
           # Whether the build worked is decided by Assemble, and what it produced is listed

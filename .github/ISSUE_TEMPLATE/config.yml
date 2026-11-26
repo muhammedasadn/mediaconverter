@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: "💡 Discussions & Feedback"
-    url: https://github.com/SibtainOcn/Hazel/discussions
+    url: https://github.com/muhammedasadn/mediaconverter/discussions
     about: Share suggestions, ask questions, or connect with the community before opening an issue.
   - name: "🌐 Website Extraction Failures"
     url: https://github.com/yt-dlp/yt-dlp/issues

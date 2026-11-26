@@ -336,6 +336,6 @@ python tools/release/fastlane_yaml_checker/checker.py
 
 To auto-format or fix formatting discrepancies:
 ```bash
-python tools/release/fastlane_yaml_checker/checker.py --yaml path/to/com.hazel.android.yml --fix
+python tools/release/fastlane_yaml_checker/checker.py --yaml path/to/com.muhammedasadn.mediaconverter.yml --fix
 ```
 

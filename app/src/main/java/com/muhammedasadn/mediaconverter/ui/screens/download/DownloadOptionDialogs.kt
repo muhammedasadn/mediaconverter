@@ -1,0 +1,404 @@
+package com.muhammedasadn.mediaconverter.ui.screens.download
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import com.muhammedasadn.mediaconverter.ui.components.FlatChip
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.ClosedCaption
+import androidx.compose.material.icons.filled.Image
+import com.muhammedasadn.mediaconverter.ui.components.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import com.muhammedasadn.mediaconverter.ui.components.ExpressiveTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.muhammedasadn.mediaconverter.R
+import com.muhammedasadn.mediaconverter.download.OneOffOptions
+import com.muhammedasadn.mediaconverter.ui.screens.more.MultiChoiceDialog
+import com.muhammedasadn.mediaconverter.ui.screens.more.SingleChoiceDialog
+import androidx.compose.material.icons.filled.LiveTv
+import com.muhammedasadn.mediaconverter.download.AUDIO_QUALITY_STEPS
+import com.muhammedasadn.mediaconverter.download.DownloadOptions
+import com.muhammedasadn.mediaconverter.download.SponsorBlock
+
+/**
+ * The dialogs behind the option chips at the foot of the download sheet.
+ *
+ * Each one edits a copy of [DownloadOptions] and hands the whole thing back on confirm, so
+ * a dialog can never leave the sheet holding a half-applied change.
+ */
+
+/**
+ * Picks which SponsorBlock segments to cut out of the download.
+ *
+ * The ids are yt-dlp's own category names; yt-dlp is what queries the SponsorBlock service,
+ * so nothing here has to track the API. Checking nothing turns removal off entirely, which
+ * is the default. Segments are still marked as chapters whenever chapters are embedded.
+ */
+@Composable
+fun SponsorBlockDialog(
+    options: DownloadOptions,
+    onConfirm: (DownloadOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    MultiChoiceDialog(
+        title = stringResource(R.string.options_sponsorblock_title),
+        choices = SponsorBlock.CATEGORIES,
+        selected = options.sponsorBlockFilters,
+        onConfirm = { onConfirm(options.copy(sponsorBlockFilters = it)) },
+        onDismiss = onDismiss
+    )
+}
+
+/**
+ * Whether chapters are embedded into the file, and whether the file is split by them.
+ *
+ * Embedding is offered for a video download only, since yt-dlp writes the chapter markers
+ * into the video container. Splitting applies to both.
+ */
+@Composable
+fun ChaptersDialog(
+    options: DownloadOptions,
+    isVideo: Boolean,
+    onChange: (DownloadOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.Book, null) },
+        title = { Text(stringResource(R.string.options_chapters_title), fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                if (isVideo) {
+                    ToggleRow(
+                        label = stringResource(R.string.options_chapters_in_videos),
+                        checked = options.addChapters,
+                        onCheckedChange = { onChange(options.copy(addChapters = it)) }
+                    )
+                }
+                ToggleRow(
+                    label = stringResource(R.string.options_chapters_split),
+                    checked = options.splitByChapters,
+                    onCheckedChange = { onChange(options.copy(splitByChapters = it)) }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.options_chapters_split_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.options_chapters_dismiss)) } }
+    )
+}
+
+/**
+ * The artwork written into the file: whether there is a cover at all, and whether it is
+ * cropped to a square. Cropping only means something with a cover, so it rests greyed out
+ * while the cover is off.
+ */
+@Composable
+fun ThumbnailDialog(
+    options: DownloadOptions,
+    onChange: (DownloadOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.Image, null) },
+        title = { Text(stringResource(R.string.options_thumbnail_title), fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                ToggleRow(
+                    label = stringResource(R.string.options_thumbnail_embed),
+                    checked = options.embedThumbnail,
+                    onCheckedChange = { onChange(options.copy(embedThumbnail = it)) }
+                )
+                ToggleRow(
+                    label = stringResource(R.string.options_thumbnail_crop),
+                    checked = options.embedThumbnail && options.cropThumbnail,
+                    enabled = options.embedThumbnail,
+                    onCheckedChange = { onChange(options.copy(cropThumbnail = it)) }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.options_thumbnail_crop_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.options_chapters_dismiss)) } }
+    )
+}
+
+/**
+ * How to take a live stream: from its beginning rather than from now, for one that is live;
+ * waited for and then downloaded, for one that has not started.
+ */
+@Composable
+fun LiveStreamDialog(
+    isUpcoming: Boolean,
+    current: OneOffOptions,
+    onChange: (OneOffOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.LiveTv, null) },
+        title = { Text(stringResource(R.string.options_live_title), fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                if (isUpcoming) {
+                    ToggleRow(
+                        label = stringResource(R.string.options_live_wait),
+                        checked = current.waitForVideo,
+                        onCheckedChange = { onChange(current.copy(waitForVideo = it)) }
+                    )
+                    Text(
+                        stringResource(R.string.options_live_wait_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                    )
+                } else {
+                    ToggleRow(
+                        label = stringResource(R.string.options_live_from_start),
+                        checked = current.liveFromStart,
+                        onCheckedChange = { onChange(current.copy(liveFromStart = it)) }
+                    )
+                    Text(
+                        stringResource(R.string.options_live_from_start_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.options_chapters_dismiss)) }
+        }
+    )
+}
+
+/**
+ * Subtitle handling: embedded into the file, saved alongside it, or both, plus the language
+ * selector yt-dlp is given as `--sub-langs`.
+ */
+@Composable
+fun SubtitlesDialog(
+    options: DownloadOptions,
+    onChange: (DownloadOptions) -> Unit,
+    onDismiss: () -> Unit,
+    /** The link's uploaded subtitle keys, offered as chips when it has been read. */
+    available: List<String> = emptyList(),
+    /** Its auto captions in the spoken language, by key ("en-orig", or "en" with no translations). */
+    availableAuto: List<String> = emptyList()
+) {
+    var languageDialog by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.ClosedCaption, null) },
+        title = { Text(stringResource(R.string.options_subtitles_title), fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                ToggleRow(
+                    label = stringResource(R.string.options_subtitles_embed),
+                    checked = options.embedSubs,
+                    onCheckedChange = { onChange(options.copy(embedSubs = it)) }
+                )
+                ToggleRow(
+                    label = stringResource(R.string.options_subtitles_save),
+                    checked = options.writeSubs,
+                    onCheckedChange = { onChange(options.copy(writeSubs = it)) }
+                )
+                ToggleRow(
+                    label = stringResource(R.string.options_subtitles_save_auto),
+                    checked = options.writeAutoSubs,
+                    onCheckedChange = { onChange(options.copy(writeAutoSubs = it)) }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { languageDialog = true }
+                        .padding(vertical = 6.dp)
+                ) {
+                    Text(stringResource(R.string.options_subtitles_languages_label), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        options.subLanguages.ifBlank { DownloadOptions.DEFAULT_SUB_LANGUAGES },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                    )
+                }
+
+                // What this link has, to pick from rather than type. A tap adds or removes
+                // that key in the languages above.
+                if (available.isNotEmpty() || availableAuto.isNotEmpty()) {
+                    val tokens = subLanguageKeys(options.subLanguages)
+                    val chosen = (available + availableAuto).filter { key -> tokens.any { subLangMatches(it, key) } }.toSet()
+                    val toggle: (String) -> Unit = { key ->
+                        // Off also drops a pattern that takes it, such as ".*-orig".
+                        val next = if (key in chosen) tokens.filterNot { subLangMatches(it, key) } else tokens + key
+                        onChange(options.copy(subLanguages = next.joinToString(",").ifBlank { DownloadOptions.DEFAULT_SUB_LANGUAGES }))
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        available.forEach { key ->
+                            FlatChip(label = subtitleName(key), selected = key in chosen, compact = true, onClick = { toggle(key) })
+                        }
+                        availableAuto.filterNot { it in available }.forEach { key ->
+                            FlatChip(
+                                label = stringResource(R.string.options_subtitles_auto_caption, subtitleName(key.removeSuffix("-orig"))),
+                                selected = key in chosen,
+                                compact = true,
+                                onClick = { toggle(key) }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.options_subtitles_dismiss)) } }
+    )
+
+    if (languageDialog) {
+        TextInputDialog(
+            title = stringResource(R.string.options_subtitles_languages_title),
+            hint = stringResource(R.string.options_subtitles_languages_hint),
+            value = options.subLanguages,
+            onConfirm = {
+                onChange(
+                    options.copy(
+                        subLanguages = it.ifBlank { DownloadOptions.DEFAULT_SUB_LANGUAGES }
+                    )
+                )
+                languageDialog = false
+            },
+            onDismiss = { languageDialog = false }
+        )
+    }
+}
+
+/** The keys and patterns of a `--sub-langs` value, the default when it is blank. */
+internal fun subLanguageKeys(value: String): List<String> =
+    value.ifBlank { DownloadOptions.DEFAULT_SUB_LANGUAGES }.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
+/** Whether one `--sub-langs` entry takes [key]: by name, or as yt-dlp's regex. Exclusions ("-x") take nothing. */
+internal fun subLangMatches(entry: String, key: String): Boolean =
+    entry == key || (!entry.startsWith("-") && runCatching { Regex(entry).matches(key) }.getOrDefault(false))
+
+private fun subtitleName(key: String): String =
+    java.util.Locale.forLanguageTag(key).getDisplayName(java.util.Locale.getDefault())
+        .takeIf { it.isNotBlank() && !it.equals(key, ignoreCase = true) } ?: key
+
+@Composable
+internal fun ToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+    }
+}
+
+/** Single-line editor shared by the template and subtitle-language dialogs. */
+@Composable
+internal fun TextInputDialog(
+    title: String,
+    hint: String,
+    value: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var draft by remember { mutableStateOf(value) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                Text(
+                    hint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                ExpressiveTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { onConfirm(draft.trim()) }) { Text(stringResource(R.string.options_text_input_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.options_text_input_cancel)) } }
+    )
+}
+
+/**
+ * Picks audio quality preset / bitrate ceiling.
+ */
+@Composable
+fun AudioQualityDialog(
+    options: DownloadOptions,
+    onConfirm: (DownloadOptions) -> Unit,
+    onDismiss: () -> Unit
+) {
+    SingleChoiceDialog(
+        title = stringResource(R.string.properties_bitrate),
+        choices = AUDIO_QUALITY_STEPS.map { (quality, labelRes) -> quality to stringResource(labelRes) },
+        selected = options.audioQuality,
+        onSelect = { onConfirm(options.copy(audioQuality = it)) },
+        onDismiss = onDismiss
+    )
+}
+

@@ -1,13 +1,13 @@
-# Contributing to Hazel
+# Contributing to Media Converter
 
-Thanks for helping. Hazel is a front end for yt-dlp on Android, used by a lot of people
+Thanks for helping. Media Converter is a front end for yt-dlp and gallery-dl on Android, used by a lot of people
 who never read this page, so every change is judged by one question: does it make the app
 better for them without breaking anything they rely on.
 
 | I want to | Go to |
 |---|---|
 | Report a bug or ask for a feature | [Issues](#issues) |
-| Translate Hazel | [Translations](#translations) |
+| Translate Media Converter | [Translations](#translations) |
 | Change the code | [Pull requests](#pull-requests) |
 | Edit the website or user guide | [Website and documentation](#website-and-documentation) |
 | Report a security problem | [SECURITY.md](SECURITY.md), never a public issue |
@@ -20,11 +20,11 @@ every field. Issues missing the required details may be closed without review.
 - **A site fails to download** (HTTP 403, sign-in walls, "unsupported URL"): update yt-dlp
   in **Settings > Engine** first. If it still fails, it is almost always a yt-dlp extractor
   problem and belongs on the [yt-dlp tracker](https://github.com/yt-dlp/yt-dlp/issues).
-- **Bugs**: include the Hazel version, Android version, the link (if public), your custom
+- **Bugs**: include the Media Converter version, Android version, the link (if public), your custom
   options, and the steps. A short screen recording helps a lot.
-- **Features**: Hazel exposes what yt-dlp can do. Requests for things yt-dlp itself does
+- **Features**: Media Converter exposes what yt-dlp can do. Requests for things yt-dlp itself does
   not support cannot be accepted.
-- **Questions and ideas**: use [Discussions](https://github.com/SibtainOcn/Hazel/discussions).
+- **Questions and ideas**: use [Discussions](https://github.com/muhammedasadn/mediaconverter/discussions).
 
 ## Translations
 

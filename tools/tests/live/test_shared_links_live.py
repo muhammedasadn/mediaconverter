@@ -48,7 +48,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-KOTLIN = os.path.join(ROOT, "app/src/main/java/com/hazel/android")
+KOTLIN = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter")
 
 MARK = "#hazel-item="
 PLAYLIST_PARAMS = ("list", "index", "start_radio", "pp")

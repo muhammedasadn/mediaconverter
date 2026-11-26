@@ -70,7 +70,7 @@ python tools/strings/check.py translations --strict
 
 ## Languages in the app
 
-A language appears in the app's language list (`app/src/main/java/com/hazel/android/util/AppLocale.kt`)
+A language appears in the app's language list (`app/src/main/java/com/muhammedasadn/mediaconverter/util/AppLocale.kt`)
 and in Android's per-app language setting (`app/src/main/res/xml/locales_config.xml`) only
 when it is at least 80% translated. A new language can be merged at any percentage; the
 app already uses whatever is translated. When the translations check prints

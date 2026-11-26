@@ -27,5 +27,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Hazel"
+rootProject.name = "MediaConverter"
 include(":app")

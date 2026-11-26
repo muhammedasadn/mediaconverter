@@ -503,7 +503,7 @@ def main():
     check_true("SearchScreen uses painterResource(R.drawable.ic_search)", "painterResource(R.drawable.ic_search)" in search_screen_kt)
 
     view_model_kt = (REPO_ROOT / "app" / "src" / "main" / "java" / "com" / "hazel" / "android" / "download" / "DownloadViewModel.kt").read_text(encoding="utf-8")
-    check_true("DownloadViewModel imports SearchHistoryRepository", "import com.hazel.android.data.SearchHistoryRepository" in view_model_kt)
+    check_true("DownloadViewModel imports SearchHistoryRepository", "import com.muhammedasadn.mediaconverter.data.SearchHistoryRepository" in view_model_kt)
     check_true("DownloadViewModel fetchAll records searches into SearchHistoryRepository", "SearchHistoryRepository.record(app, it)" in view_model_kt)
     overlay_kt = (REPO_ROOT / "app" / "src" / "main" / "java" / "com" / "hazel" / "android" / "ui" / "share" / "ShareOverlayActivity.kt").read_text(encoding="utf-8")
     check_true("Shared links are recorded into SearchHistoryRepository", "SearchHistoryRepository.record(app, url)" in overlay_kt)
@@ -524,7 +524,7 @@ def main():
     check_true("MediaProbe.kt supports anonymous fallback on cookie failure", "val canFallback = !last && (attempt.hasCookies || isSignInRefusal(e.message))" in media_probe_kt)
 
     cookie_repo_kt = (REPO_ROOT / "app" / "src" / "main" / "java" / "com" / "hazel" / "android" / "data" / "CookieRepository.kt").read_text(encoding="utf-8")
-    check_true("CookieRepository.kt imports InfoCache", "import com.hazel.android.download.InfoCache" in cookie_repo_kt)
+    check_true("CookieRepository.kt imports InfoCache", "import com.muhammedasadn.mediaconverter.download.InfoCache" in cookie_repo_kt)
     check_true("CookieRepository.kt clears InfoCache in setUseCookies", "setUseCookies" in cookie_repo_kt and "InfoCache.clear()" in cookie_repo_kt)
     check_true("CookieRepository.kt clears InfoCache in upsert", "upsert" in cookie_repo_kt and "InfoCache.clear()" in cookie_repo_kt)
     check_true("CookieRepository.kt clears InfoCache in setEnabled", "setEnabled" in cookie_repo_kt and "InfoCache.clear()" in cookie_repo_kt)

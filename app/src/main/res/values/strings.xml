@@ -5,7 +5,7 @@
          string is what the launcher, the top bar, the splash and the notifications all
          read, so translating it once would rename the app everywhere.
     -->
-    <string name="app_name" translatable="false">Hazel</string>
+    <string name="app_name" translatable="false">Media Converter</string>
     <string name="engine_gallery_dl" translatable="false">gallery-dl</string>
     <!--
          Shown in the system share sheet. Android puts the app name in front of this,
@@ -116,7 +116,7 @@
     <string name="search_options_title">Search options</string>
     <string name="search_web_title">Search the Web</string>
     <string name="label_beta">Beta</string>
-    <string name="search_web_notice">Finds videos on any site Hazel can download. Playback and downloads may not work on every site.</string>
+    <string name="search_web_notice">Finds videos on any site Media Converter can download. Playback and downloads may not work on every site.</string>
     <string name="search_web_continue">Continue</string>
     <string name="search_empty_history">Your searches and links will appear here</string>
     <string name="search_no_matches">No matches</string>
@@ -229,8 +229,8 @@
     <!-- ConverterScreen -->
     <string name="converter_label_convert_to">Convert to</string>
     <string name="converter_label_saved_to">Saved to</string>
-    <string name="converter_hazel_storage">Hazel\'s own storage</string>
-    <string name="converter_storage_warning">Without storage access the file stays inside Hazel, where other apps cannot see it.</string>
+    <string name="converter_hazel_storage">Media Converter\'s own storage</string>
+    <string name="converter_storage_warning">Without storage access the file stays inside Media Converter, where other apps cannot see it.</string>
     <string name="converter_back">Back</string>
     <string name="converter_title">Offline Converter</string>
     <string name="converter_subtitle">Video to audio, nothing leaves the phone</string>
@@ -268,7 +268,7 @@
     <string name="more_temporary_files">Temporary Files</string>
     <string name="more_converter">Offline convert video to audio</string>
     <string name="more_software_update">Software update</string>
-    <string name="more_support">Support Hazel</string>
+    <string name="more_support">Support Media Converter</string>
     <string name="more_documentation">Documentation</string>
     <string name="docs_title">Documentation</string>
     <string name="docs_back">Back</string>
@@ -285,9 +285,9 @@
 
     <!-- SponsorScreen -->
     <string name="sponsor_back">Back</string>
-    <string name="sponsor_title">Support Hazel</string>
-    <string name="sponsor_hero_title">Like Hazel? Give it some love</string>
-    <string name="sponsor_hero_body">If Hazel has been useful to you, consider supporting its development. Your support helps me keep improving Hazel and building new features. Every bit of love means a lot. 💚</string>
+    <string name="sponsor_title">Support Media Converter</string>
+    <string name="sponsor_hero_title">Like Media Converter? Give it some love</string>
+    <string name="sponsor_hero_body">If Media Converter has been useful to you, consider supporting its development. Your support helps me keep improving Media Converter and building new features. Every bit of love means a lot. 💚</string>
     <string name="sponsor_section_ways">Ways to support</string>
     <string name="sponsor_github_title">GitHub Sponsors</string>
     <string name="sponsor_github_subtitle">Monthly or one off, cancel whenever. Handled entirely by GitHub.</string>
@@ -304,7 +304,7 @@
     <string name="sponsor_source_subtitle">Every line of it is public, and pull requests are welcome.</string>
     <string name="sponsor_section_developer">Developer</string>
     <string name="sponsor_developer_subtitle">My GitHub profile and other projects.</string>
-    <string name="sponsor_developer_name" translatable="false">SibtainOcn</string>
+    <string name="sponsor_developer_name" translatable="false">muhammedasadn</string>
 
 
     <!-- DownloadOptionDialogs -->
@@ -543,7 +543,7 @@
     <string name="cookies_expires">Expires %1$s</string>
     <string name="cookies_expired">Expired</string>
     <string name="cookies_session_only">Session only</string>
-    <string name="cookies_add_body">Hazel opens the site\'s sign-in page and saves its cookies when you\'re done.</string>
+    <string name="cookies_add_body">Media Converter opens the site\'s sign-in page and saves its cookies when you\'re done.</string>
     <string name="cookies_add_continue">Continue</string>
     <string name="cookies_show">Show cookies</string>
     <string name="cookies_hide">Hide cookies</string>
@@ -628,17 +628,17 @@
     <string name="ytdlp_update_channel_name">Engine updates</string>
     <string name="ytdlp_update_channel_description">yt-dlp engine update alerts</string>
     <string name="ytdlp_update_available_title">yt-dlp %1$s is available</string>
-    <string name="ytdlp_update_available_text">Open Hazel to update the download engine</string>
+    <string name="ytdlp_update_available_text">Open Media Converter to update the download engine</string>
     <string name="ytdlp_update_installed_title">yt-dlp updated to %1$s</string>
     <string name="ytdlp_update_installed_text">The download engine is up to date</string>
     <string name="ytdlp_update_failed_title">yt-dlp %1$s could not be installed</string>
-    <string name="ytdlp_update_failed_text">Hazel kept the current engine and will try again later</string>
+    <string name="ytdlp_update_failed_text">Media Converter kept the current engine and will try again later</string>
     <string name="notification_action_pause">Pause</string>
     <string name="notification_action_resume">Resume</string>
     <string name="notification_action_cancel">Cancel</string>
     <string name="notification_action_sign_in">Sign in</string>
     <string name="notification_action_dismiss">Dismiss</string>
-    <string name="widget_quick_actions_label">Hazel quick actions</string>
+    <string name="widget_quick_actions_label">Media Converter quick actions</string>
     <string name="widget_quick_actions_description">Paste a copied link, save it as audio or video, or open your downloads</string>
     <string name="notification_wifi_title">Waiting for Wi-Fi</string>
     <string name="notification_wifi_text">Downloads are set to Wi-Fi only. They start when you are back on Wi-Fi.</string>
@@ -710,7 +710,7 @@
     <string name="language_cancel">Cancel</string>
     <string name="language_confirm">Confirm</string>
     <string name="language_changed_title">Language changed</string>
-    <string name="language_changed_body">Hazel is now in this language. Anything the app has not been translated into stays in English.</string>
+    <string name="language_changed_body">Media Converter is now in this language. Anything the app has not been translated into stays in English.</string>
     <string name="language_changed_ok">OK</string>
     <string name="appearance_dark_theme">Dark Theme</string>
     <string name="appearance_on">On</string>
@@ -882,7 +882,7 @@
     <string name="advanced_no_check_certificates">Skip certificate checks</string>
     <string name="advanced_no_check_certificates_summary">Only for sites this device doesn\'t trust. Connections become less safe.</string>
     <string name="advanced_extra_args">Extra download arguments</string>
-    <string name="advanced_extra_args_hint">yt-dlp arguments added to every download. Options Hazel sets itself are skipped.</string>
+    <string name="advanced_extra_args_hint">yt-dlp arguments added to every download. Options Media Converter sets itself are skipped.</string>
     <string name="advanced_reset">Reset advanced settings</string>
     <string name="advanced_reset_title">Reset advanced settings?</string>
     <string name="advanced_reset_body">Every option on this screen goes back to off or empty.</string>
@@ -948,7 +948,7 @@
     <string name="backup_choose">Select backup categories</string>
     <string name="backup_saved">Saved %1$s</string>
     <string name="backup_failed">The backup could not be saved</string>
-    <string name="backup_not_a_backup">That file is not a Hazel backup</string>
+    <string name="backup_not_a_backup">That file is not a Media Converter backup</string>
     <string name="backup_restored">Restored. Downloads from the queue are paused until you resume them.</string>
     <string name="backup_category_settings">Settings</string>
     <string name="backup_category_history">Downloads</string>
@@ -979,13 +979,13 @@
     <string name="backup_delete_body">The file is removed from the folder. This cannot be undone.</string>
     <string name="backup_delete_failed">The backup could not be deleted</string>
     <string name="backup_restore_failed">The backup could not be restored</string>
-    <string name="backup_newer">This backup is from Hazel %1$s. Update the app to restore it.</string>
+    <string name="backup_newer">This backup is from Media Converter %1$s. Update the app to restore it.</string>
     <string name="backup_preview_title">Restore this backup?</string>
-    <string name="backup_preview_from">Hazel %1$s · %2$s</string>
+    <string name="backup_preview_from">Media Converter %1$s · %2$s</string>
     <string name="backup_entries">%1$d entries</string>
     <string name="backup_offer_title">Restore your data?</string>
     <string name="backup_offer_found">A backup from %1$s was found.</string>
-    <string name="backup_offer_pick">Pick a Hazel backup file to bring back your settings and downloads.</string>
+    <string name="backup_offer_pick">Pick a Media Converter backup file to bring back your settings and downloads.</string>
     <string name="backup_offer_choose">Choose file</string>
     <string name="backup_not_now">Not now</string>
     <string name="backup_folder_body">Where backups are saved. Automatic backups and the restore offer look here.</string>
@@ -1064,13 +1064,13 @@
     <string name="save_location_recent_clear">Clear</string>
     <string name="save_location_tag_internal">Internal</string>
     <string name="save_location_tag_card">SD card</string>
-    <string name="save_location_recent_missing">That folder is gone or Hazel can no longer write to it, so it was taken off the list.</string>
+    <string name="save_location_recent_missing">That folder is gone or Media Converter can no longer write to it, so it was taken off the list.</string>
     <string name="save_location_open_title">Couldn\'t open that location</string>
-    <string name="save_location_open_missing">%1$s is no longer there, or Hazel can\'t reach it. Pick it again or choose another location.</string>
+    <string name="save_location_open_missing">%1$s is no longer there, or Media Converter can\'t reach it. Pick it again or choose another location.</string>
     <string name="save_location_open_no_app">No app on this device could open %1$s.</string>
-    <string name="save_location_current_missing">%1$s is no longer there, or Hazel can\'t write to it. Pick it again or choose another location.</string>
+    <string name="save_location_current_missing">%1$s is no longer there, or Media Converter can\'t write to it. Pick it again or choose another location.</string>
     <string name="save_location_error_title">Couldn\'t use that folder</string>
-    <string name="save_location_error_access">Android didn\'t let Hazel keep access to that folder. Try again, or pick a different one.</string>
+    <string name="save_location_error_access">Android didn\'t let Media Converter keep access to that folder. Try again, or pick a different one.</string>
     <string name="save_location_error_no_picker">No app on this device can pick folders.</string>
     <string name="save_location_error_card_folder">Couldn\'t create %1$s on the card, so downloads will be saved in the folder you picked.</string>
     <string name="save_fallback_title">Saved somewhere else</string>
@@ -1080,14 +1080,14 @@
     <string name="more_getting_started">Getting started</string>
     <string name="instant_label">Instant Video</string>
     <string name="instant_images_label">Instant Images</string>
-    <string name="share_label_video">Hazel Video</string>
-    <string name="share_label_images">Hazel Images</string>
+    <string name="share_label_video">Media Converter Video</string>
+    <string name="share_label_images">Media Converter Images</string>
     <string name="gallery_instant_settings">Gallery settings</string>
     <string name="shortcut_search">Search</string>
     <string name="instant_started">Download started</string>
     <string name="instant_ok">OK</string>
     <string name="instant_settings">Synthesizing settings</string>
-    <string name="guide_step_share_title">Share to Hazel</string>
+    <string name="guide_step_share_title">Share to Media Converter</string>
     <string name="instant_closing">Closing in %1$d s</string>
     <string name="advanced_section_network">Network</string>
     <string name="advanced_proxy">Proxy</string>
@@ -1107,9 +1107,9 @@
     <string name="proxy_host_invalid">Enter a host name or IP address</string>
     <string name="proxy_port_invalid">Enter a port from 1 to 65535</string>
     <string name="upd_software_title">Software update</string>
-    <string name="upd_hazel_title">Hazel updates</string>
+    <string name="upd_hazel_title">Media Converter updates</string>
     <string name="upd_ytdlp_bundled">Bundled</string>
-    <string name="upd_tile_hazel">Hazel</string>
+    <string name="upd_tile_hazel">Media Converter</string>
     <string name="upd_tile_cpu">CPU</string>
     <string name="upd_tile_channel">Channel</string>
     <string name="upd_tile_code">Code</string>
@@ -1144,9 +1144,9 @@
     <string name="upd_notify_new_summary">A notice opens this screen when an update is out</string>
     <string name="upd_auto_download_title">Download updates automatically</string>
     <string name="upd_auto_download_summary">Fetch new versions so they are ready to install</string>
-    <string name="hazel_update_channel_name">Hazel updates</string>
-    <string name="hazel_update_channel_description">New Hazel versions</string>
-    <string name="hazel_update_available_title">Hazel %1$s is available</string>
+    <string name="hazel_update_channel_name">Media Converter updates</string>
+    <string name="hazel_update_channel_description">New Media Converter versions</string>
+    <string name="hazel_update_available_title">Media Converter %1$s is available</string>
     <string name="hazel_update_available_text">Tap to see what\'s new and update.</string>
     <string name="hazel_update_ready_text">Downloaded and ready. Tap to install.</string>
     <string name="guide_step_updates_title">Stay up to date</string>
@@ -1173,16 +1173,16 @@
     <string name="upd_btn_cancel">Cancel</string>
     <string name="upd_download_size">%1$s MB download</string>
     <string name="upd_speed_connecting">Connecting…</string>
-    <string name="upd_failure_fdroid_unreachable">Hazel couldn\'t reach F-Droid. Check your internet connection and try again.</string>
+    <string name="upd_failure_fdroid_unreachable">Media Converter couldn\'t reach F-Droid. Check your internet connection and try again.</string>
     <string name="upd_permission_title">Permission required</string>
-    <string name="upd_permission_text">Allow Hazel to install unknown apps to finish this update. Settings opens next.</string>
+    <string name="upd_permission_text">Allow Media Converter to install unknown apps to finish this update. Settings opens next.</string>
     <string name="upd_permission_settings">Settings</string>
     <string name="guide_updates_ytdlp">Auto yt-dlp</string>
-    <string name="guide_updates_hazel">Auto Hazel</string>
+    <string name="guide_updates_hazel">Auto Media Converter</string>
     <string name="guide_updates_wifi">Wi-Fi only</string>
     <string name="upd_failure_no_space">There isn\'t enough free storage on this device to install the update. Free up some space and try again.</string>
     <string name="upd_failure_timeout">The connection to GitHub timed out. Switch to a stronger network and try again.</string>
-    <string name="upd_failure_unreachable">Hazel couldn\'t reach GitHub. Check your internet connection, VPN and Private DNS settings, then try again.</string>
+    <string name="upd_failure_unreachable">Media Converter couldn\'t reach GitHub. Check your internet connection, VPN and Private DNS settings, then try again.</string>
     <string name="upd_failure_connection_lost">The connection dropped during the download. Try again on a more stable network.</string>
     <string name="upd_failure_clock_or_tls">A secure connection to GitHub couldn\'t be established. Check that the date and time on this device are correct, then try again.</string>
     <string name="upd_failure_http">GitHub declined the download (HTTP %1$s). Please try again in a few minutes.</string>
@@ -1240,13 +1240,13 @@
     <string name="cookies_dialog_sub">Some sources only download when signed in</string>
     <string name="cookies_open">Open</string>
     <string name="gallery_dl_update_available_title">gallery-dl %1$s is available</string>
-    <string name="gallery_dl_update_available_text">Open Hazel to update the image engine</string>
+    <string name="gallery_dl_update_available_text">Open Media Converter to update the image engine</string>
     <string name="gallery_dl_update_installed_title">gallery-dl updated to %1$s</string>
     <string name="gallery_dl_update_installed_text">The image engine is up to date</string>
     <string name="gallery_dl_update_failed_title">gallery-dl %1$s could not be installed</string>
-    <string name="gallery_dl_update_failed_text">Hazel kept the current version and will try again later</string>
+    <string name="gallery_dl_update_failed_text">Media Converter kept the current version and will try again later</string>
     <string name="upd_gallerydl_title">gallery-dl updates</string>
-    <string name="upd_gallerydl_failure_unreachable">Hazel couldn\'t reach PyPI. Check your internet connection and try again.</string>
+    <string name="upd_gallerydl_failure_unreachable">Media Converter couldn\'t reach PyPI. Check your internet connection and try again.</string>
     <string name="upd_gallerydl_failure_would_not_start">The new gallery-dl version couldn\'t start on this device, so your current version was kept.</string>
     <string name="upd_status_live">Installed and in use</string>
     <string name="upd_btn_done">Done</string>

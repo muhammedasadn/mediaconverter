@@ -34,7 +34,7 @@ if hasattr(sys.stdout, "reconfigure"):
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 IS_WINDOWS = sys.platform.startswith("win")
 GRADLE_CMD = [str(REPO_ROOT / "gradlew.bat")] if IS_WINDOWS else [str(REPO_ROOT / "gradlew")]
-GITHUB_REPO = "SibtainOcn/Hazel"
+GITHUB_REPO = "muhammedasadn/mediaconverter"
 
 
 def parse_semver(v: str) -> tuple[int, ...]:

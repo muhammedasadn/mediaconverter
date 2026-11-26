@@ -223,7 +223,7 @@
   // ── Support: share the site with the phone's own share sheet, or copy the link. ──
   document.querySelectorAll('[data-share]').forEach(function (b) {
     var label = b.querySelector('[data-share-label]');
-    var url = location.origin && location.origin !== 'null' ? location.origin + location.pathname.replace(/[^/]*$/, '') : 'https://github.com/SibtainOcn/Hazel';
+    var url = location.origin && location.origin !== 'null' ? location.origin + location.pathname.replace(/[^/]*$/, '') : 'https://github.com/muhammedasadn/mediaconverter';
     var original = label ? label.textContent : '';
     function say(text) {
       if (!label) return;
@@ -599,7 +599,7 @@
   try { saved = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
   if (saved && typeof saved.n === 'number') show(saved.n);
   if (saved && Date.now() - saved.t < HOUR) return;
-  fetch('https://api.github.com/repos/SibtainOcn/Hazel').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+  fetch('https://api.github.com/repos/muhammedasadn/mediaconverter').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d || typeof d.stargazers_count !== 'number') return;
     show(d.stargazers_count);
     try { localStorage.setItem(KEY, JSON.stringify({ n: d.stargazers_count, t: Date.now() })); } catch (e) {}

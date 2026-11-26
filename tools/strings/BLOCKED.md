@@ -12,7 +12,7 @@ it.
 
 ## The generic format rows carry their label as text
 
-**Where** `app/src/main/java/com/hazel/android/download/MediaProbe.kt`, `BEST_VIDEO` and
+**Where** `app/src/main/java/com/muhammedasadn/mediaconverter/download/MediaProbe.kt`, `BEST_VIDEO` and
 `BEST_AUDIO`.
 
 **What it does now**
@@ -50,7 +50,7 @@ that would be untrue.
 
 ## `ActionRow` builds its content description out of a translated label
 
-**Where** `app/src/main/java/com/hazel/android/ui/screens/more/DirectShareScreen.kt`,
+**Where** `app/src/main/java/com/muhammedasadn/mediaconverter/ui/screens/more/DirectShareScreen.kt`,
 the `ActionRow` composable.
 
 **What it does now**

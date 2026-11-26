@@ -1,0 +1,412 @@
+package com.muhammedasadn.mediaconverter.download
+
+import com.muhammedasadn.mediaconverter.util.UrlExtractor
+import com.yausername.youtubedl_android.YoutubeDLRequest
+import java.util.Locale
+
+/**
+ * Engine options for sources that need more than the defaults: YouTube's player clients and
+ * proof-of-origin tokens, a pause between requests for a site that rate limits, and raw
+ * arguments for anything the app has no setting for.
+ *
+ * Every one of these is passed to yt-dlp as it reads it (checked against yt-dlp 2026.08's
+ * own option parsing), and every one is off or empty by default, so a user who never opens
+ * the screen gets exactly the requests they always did.
+ */
+data class AdvancedSettings(
+    /** YouTube player clients to ask, in order. Empty leaves the choice to yt-dlp. */
+    val playerClients: List<String> = emptyList(),
+    /** PO tokens as yt-dlp takes them: `CLIENT.CONTEXT+TOKEN`, several separated by commas. */
+    val poTokens: String = "",
+    /** The visitor data the PO tokens were made for. */
+    val visitorData: String = "",
+    /**
+     * Make PO tokens on the device for every YouTube video read or downloaded, when none
+     * were pasted in. See [PoTokenGenerator].
+     */
+    val autoPoTokens: Boolean = false,
+    /** YouTube's titles and descriptions in the app's language, where YouTube has it. */
+    val metadataInAppLanguage: Boolean = false,
+    /** More YouTube extractor arguments, `key=value;key=value`, for anything not above. */
+    val youtubeExtraArgs: String = "",
+    /** Extra yt-dlp arguments added to every download, as they would be typed. */
+    val downloadExtraArgs: String = "",
+    /** `--no-check-certificates`, for a site whose certificate the device does not trust. */
+    val noCheckCertificates: Boolean = false,
+    /** `--sleep-requests`: seconds between requests while reading, for rate limited sites. */
+    val sleepRequestsSeconds: Int = 0,
+    /**
+     * `--impersonate`: the browser whose connection every request is made to look like, as
+     * yt-dlp names its families ("chrome", "safari"). Blank leaves requests as they are.
+     */
+    val impersonate: String = "",
+    /**
+     * The browser families the engine on this device said it can imitate, the last time it
+     * was asked. yt-dlp stops with an error when asked for one it cannot, so [impersonate]
+     * is only passed when it is in this list.
+     */
+    val impersonateAvailable: List<String> = emptyList(),
+    /**
+     * The saved proxy, as `scheme://[user:password@]host:port`. Kept while the proxy is
+     * switched off, so turning it back on needs nothing typed again. See [NetworkProxy].
+     */
+    val proxy: String = "",
+    /** Whether connections go through [proxy]. */
+    val proxyEnabled: Boolean = false
+) {
+    /** The proxy in force: the saved one while it is switched on, otherwise blank. */
+    val activeProxy: String get() = if (proxyEnabled) proxy else ""
+
+    /** The `--impersonate` value to pass, or null when none is set or it cannot be used. */
+    fun impersonateTarget(): String? =
+        impersonate.trim().lowercase().takeIf { it.isNotEmpty() && it in impersonateAvailable }
+
+    /**
+     * The `--extractor-args` value for YouTube, or null when nothing is set. Built as one
+     * value because yt-dlp keeps only the last `youtube:` it is given.
+     */
+    fun youtubeExtractorArgs(
+        appLanguage: String = Locale.getDefault().toLanguageTag(),
+        generated: PoTokenGenerator.Minted? = null,
+        signedIn: Boolean = false
+    ): String? {
+        val pasted = validPoTokens()
+        // Tokens made here are used only when none were pasted in, and mweb is added to
+        // yt-dlp's own clients for them: its streams are the ones they unlock, while the
+        // web client is served in a form yt-dlp cannot download (2026).
+        val made = generated?.takeIf { pasted.isEmpty() }
+        val madeTokens = made?.let(::generatedTokens).orEmpty()
+        val parts = buildList {
+            val clients = playerClients.filter { it in PLAYER_CLIENTS || it == "default" }
+            when {
+                clients.isNotEmpty() -> add("player_client=${clients.joinToString(",")}")
+                madeTokens.isNotEmpty() -> add("player_client=default,mweb")
+            }
+            val tokens = pasted.ifEmpty { madeTokens }
+            if (tokens.isNotEmpty()) add("po_token=${tokens.joinToString(",")}")
+            val visitor = visitorData.trim().takeIf { it.isNotEmpty() && ';' !in it }
+            when {
+                visitor != null -> add("visitor_data=$visitor")
+                // yt-dlp wants the visitor the tokens were made with when signed out, read
+                // from nowhere else; signed in, the account stands in for it.
+                made != null && madeTokens.isNotEmpty() && !signedIn -> {
+                    add("visitor_data=${made.visitorData}")
+                    if (!youtubeExtraArgs.contains("player_skip")) add("player_skip=webpage,configs")
+                }
+            }
+            if (metadataInAppLanguage) youtubeLanguage(appLanguage)?.let { add("lang=$it") }
+            youtubeExtraArgs.split(';').map { it.trim() }
+                .filter { '=' in it && !it.startsWith("=") }
+                .forEach { add(it) }
+        }
+        return parts.takeIf { it.isNotEmpty() }?.joinToString(";", prefix = "youtube:")
+    }
+
+    /**
+     * The made tokens as yt-dlp takes them. YouTube binds the streaming token to the video
+     * for most sessions now, and the player token always is, so the video's token serves
+     * both, for each web client that uses them.
+     */
+    private fun generatedTokens(made: PoTokenGenerator.Minted): List<String> {
+        val token = made.videoTokens.values.firstOrNull() ?: return emptyList()
+        return WEB_TOKEN_CLIENTS.flatMap { client -> listOf("$client.gvs+$token", "$client.player+$token") }
+    }
+
+    /**
+     * The tokens that are in the form yt-dlp accepts. A token it cannot read is skipped by
+     * yt-dlp with a warning; dropping it here keeps the request clean, and the screen says
+     * which ones were not taken.
+     */
+    fun validPoTokens(): List<String> =
+        poTokens.split(',', '\n').map { it.trim() }.filter { PO_TOKEN_FORMAT.matches(it) }
+
+    /** The extra download arguments as a list, with the ones the app relies on removed. */
+    fun downloadArguments(): List<String> {
+        val args = splitArguments(downloadExtraArgs)
+        // With folders, --no-windows-filenames is dropped: it turns off the field cleaning that keeps a ".." value inside the work folder.
+        val folders = lastOutputTemplate(args)?.let(OutputPath::parse)?.folders.orEmpty().isNotEmpty()
+        return withoutReservedOptions(args, if (folders) RESERVED_WITH_FOLDERS else emptySet())
+    }
+
+    /** The user's `--compat-options` plus [required], merged into one option so neither replaces the other. */
+    fun compatOptions(required: List<String> = emptyList()): List<String> =
+        // The app's own options go last so a user's "-name" cannot remove them.
+        (allCompatOptions(splitArguments(downloadExtraArgs)).filter { it !in required } + required).distinct()
+
+    /** The user's last `-o`, as typed, or null. */
+    fun outputTemplateText(): String? = lastOutputTemplate(splitArguments(downloadExtraArgs))
+
+    /** The user's `-o` as folders and a name inside the work folder, or null (see [OutputPath.parse]). */
+    fun outputPathOverride(): OutputPath? = outputTemplateText()?.let(OutputPath::parse)
+
+    companion object {
+        /**
+         * YouTube player clients yt-dlp 2026.10 knows. A name it does not know is skipped
+         * with a warning, so the list only has to be current, not complete.
+         */
+        val PLAYER_CLIENTS = listOf(
+            "web", "web_safari", "web_embedded", "web_music", "web_creator", "mweb",
+            "android", "android_vr", "ios", "visionos", "tv", "tv_downgraded", "tv_samsung",
+            "tv_simply"
+        )
+
+        /** The clients whose tokens come from the web challenge the device can run. */
+        private val WEB_TOKEN_CLIENTS = listOf("mweb", "web", "web_safari", "web_music")
+
+        /** `CLIENT.CONTEXT+TOKEN`, the context being gvs, player or subs. */
+        private val PO_TOKEN_FORMAT = Regex("""^[a-z_]+\.(gvs|player|subs)\+[A-Za-z0-9_\-=%]+$""")
+
+        /**
+         * The language codes YouTube accepts for its metadata, as yt-dlp lists them. It
+         * refuses the whole read for any other code, so only one of these is ever sent.
+         */
+        private val YOUTUBE_LANGUAGES = setOf(
+            "af", "az", "id", "ms", "bs", "ca", "cs", "da", "de", "et", "en-IN", "en-GB", "en",
+            "es", "es-419", "es-US", "eu", "fil", "fr", "fr-CA", "gl", "hr", "zu", "is", "it", "sw",
+            "lv", "lt", "hu", "nl", "no", "uz", "pl", "pt-PT", "pt", "ro", "sq", "sk", "sl",
+            "sr-Latn", "fi", "sv", "vi", "tr", "be", "bg", "ky", "kk", "mk", "mn", "ru", "sr", "uk",
+            "el", "hy", "iw", "ur", "ar", "fa", "ne", "mr", "hi", "as", "bn", "pa", "gu", "or",
+            "ta", "te", "kn", "ml", "si", "th", "lo", "my", "ka", "am", "km", "zh-CN", "zh-TW",
+            "zh-HK", "ja", "ko"
+        )
+
+        /**
+         * The YouTube code for an app language tag: the tag itself where YouTube has it,
+         * then the language alone, with the few codes Android and YouTube write differently
+         * ("in" and "id", "he" and "iw", Brazilian Portuguese as plain "pt"). Null when
+         * YouTube has none.
+         */
+        fun youtubeLanguage(tag: String): String? {
+            val locale = Locale.forLanguageTag(tag.replace('_', '-'))
+            val language = when (locale.language) {
+                "in" -> "id"
+                "he" -> "iw"
+                "nb", "nn" -> "no"
+                else -> locale.language
+            }
+            val region = locale.country
+            val candidates = listOfNotNull(
+                region.takeIf { it.isNotBlank() }?.let { "$language-$it" },
+                if (language == "zh") "zh-CN" else null,
+                language
+            )
+            return candidates.firstOrNull { it in YOUTUBE_LANGUAGES }
+        }
+
+        /** Dropped too while the output template has folders. */
+        private val RESERVED_WITH_FOLDERS = setOf("--no-windows-filenames")
+
+        /**
+         * Options the app sets itself and reads the output of. Given again from here they
+         * would move the file where the app cannot find it, or change the output the progress
+         * is read from, so they are dropped with their values.
+         */
+        /** Reserved options that take no value. */
+        private val RESERVED_FLAGS = setOf(
+            "-q", "--quiet", "--no-progress", "-s", "--simulate", "--skip-download",
+            "-j", "--dump-json", "-J", "--dump-single-json", "--newline"
+        )
+
+        /** Reserved options with one value, which may start with a dash (`--compat-options -multistreams`). */
+        private val RESERVED_ONE_VALUE = setOf(
+            "-o", "--output", "-P", "--paths", "--load-info-json", "-a", "--batch-file",
+            "-O", "--print", "--progress-template", "--cookies", "--cookies-from-browser",
+            // Merged into one --compat-options instead; see [compatOptions].
+            "--compat-options"
+        )
+
+        /** `--print-to-file TEMPLATE FILE`: the only reserved option with two values. */
+        private val RESERVED_TWO_VALUES = setOf("--print-to-file")
+
+        /** Options the app sets itself and reads the output of; dropped with their values. */
+        private val RESERVED = RESERVED_FLAGS + RESERVED_ONE_VALUE + RESERVED_TWO_VALUES
+
+        /** yt-dlp takes the next word as the value even if it starts with `-`; a word starting with `--` is read as the next option instead. */
+        private fun isValueWord(word: String): Boolean = !word.startsWith("--")
+
+        /** How many words follow [name] as its values when it is written without an `=`. */
+        private fun valueCount(name: String): Int = when (name) {
+            in RESERVED_TWO_VALUES -> 2
+            in RESERVED_ONE_VALUE -> 1
+            else -> 0
+        }
+
+        /**
+         * Splits a line of arguments the way a shell would: on spaces, keeping quoted text
+         * together and taking a backslash to escape the next character.
+         */
+        fun splitArguments(line: String): List<String> {
+            val out = mutableListOf<String>()
+            val current = StringBuilder()
+            var quote: Char? = null
+            var escaped = false
+            var inToken = false
+            for (c in line) {
+                when {
+                    escaped -> { current.append(c); escaped = false; inToken = true }
+                    c == '\\' && quote != '\'' -> escaped = true
+                    quote != null -> if (c == quote) quote = null else current.append(c)
+                    c == '"' || c == '\'' -> { quote = c; inToken = true }
+                    c.isWhitespace() -> if (inToken) {
+                        out += current.toString(); current.clear(); inToken = false
+                    }
+                    else -> { current.append(c); inToken = true }
+                }
+            }
+            if (inToken) out += current.toString()
+            return out
+        }
+
+        /** Every value of every `--compat-options` in [args]; each takes a comma separated list. */
+        internal fun allCompatOptions(args: List<String>): List<String> {
+            val out = mutableListOf<String>()
+            var i = 0
+            while (i < args.size) {
+                val arg = args[i]
+                if (arg.substringBefore('=') == "--compat-options") {
+                    val value = if ('=' in arg) {
+                        arg.substringAfter('=')
+                    } else {
+                        args.getOrNull(i + 1)?.takeIf(::isValueWord)?.also { i++ }
+                    }
+                    value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.let(out::addAll)
+                }
+                i++
+            }
+            return out
+        }
+
+        /** The last `-o` / `--output` for the media file, in any spelling; side-file templates are skipped. */
+        internal fun lastOutputTemplate(args: List<String>): String? {
+            var found: String? = null
+            fun take(value: String) {
+                if (!OutputPath.isSideFileTemplate(value)) found = value
+            }
+            var i = 0
+            while (i < args.size) {
+                val arg = args[i]
+                val name = arg.substringBefore('=')
+                when {
+                    name == "-o" || name == "--output" -> {
+                        if ('=' in arg) {
+                            take(arg.substringAfter('='))
+                        } else {
+                            args.getOrNull(i + 1)?.takeIf(::isValueWord)?.let { take(it); i++ }
+                        }
+                    }
+                    // Short option with its value joined, as in "-ofile.%(ext)s".
+                    !arg.startsWith("--") && arg.length > 2 && arg.startsWith("-o") -> take(arg.substring(2))
+                }
+                i++
+            }
+            return found
+        }
+
+        private fun withoutReservedOptions(args: List<String>, also: Set<String> = emptySet()): List<String> {
+            val out = mutableListOf<String>()
+            var skip = 0
+            for (arg in args) {
+                if (skip > 0) {
+                    if (isValueWord(arg)) {
+                        skip--
+                        continue
+                    }
+                    // Value missing: read this word as the next option.
+                    skip = 0
+                }
+                val name = arg.substringBefore('=')
+                if (name in RESERVED || name in also) {
+                    // Drop the values with their option, in `--opt value` and `--opt=value` form.
+                    if ('=' !in arg) skip = valueCount(name)
+                    continue
+                }
+                // A short option may carry its value joined to it, as in "-ofile.%(ext)s".
+                if (!arg.startsWith("--") && arg.length > 2 && arg.take(2) in RESERVED) continue
+                out += arg
+            }
+            return out
+        }
+    }
+}
+
+/**
+ * Applies the advanced settings to a request. Called beside [applySiteAccess] on every read
+ * and every download, so the two always ask the site the same way.
+ */
+fun YoutubeDLRequest.applyAdvanced(
+    url: String,
+    signedIn: Boolean = false,
+    settings: AdvancedSettings = AdvancedSettingsStore.ready()
+) {
+    NetworkProxy.forEngine(settings)?.let { addOption("--proxy", it) }
+    if (settings.noCheckCertificates) addOption("--no-check-certificates")
+    if (settings.sleepRequestsSeconds > 0) {
+        addOption("--sleep-requests", settings.sleepRequestsSeconds.toString())
+    }
+    settings.impersonateTarget()?.let { addOption("--impersonate", it) }
+    if (isYouTube(url) || url.contains("music.youtube.com")) {
+        // Made only for a single video: a playlist's listing needs no token, and each of its
+        // videos gets its own when it is read.
+        val generated = if (settings.autoPoTokens && settings.validPoTokens().isEmpty()) {
+            UrlExtractor.extractYouTubeId(url)?.let { PoTokenGenerator.mintBlocking(listOf(it)) }
+        } else null
+        settings.youtubeExtractorArgs(generated = generated, signedIn = signedIn)
+            ?.let { addOption("--extractor-args", it) }
+    }
+}
+
+/**
+ * Adds the extra download arguments. Kept apart from [applyAdvanced] because they belong to
+ * downloads only, and go last, so that one of them can change what the app set before it.
+ */
+fun YoutubeDLRequest.applyExtraDownloadArguments(settings: AdvancedSettings = AdvancedSettingsStore.ready()) {
+    val args = settings.downloadArguments()
+    var i = 0
+    while (i < args.size) {
+        val arg = args[i]
+        val next = args.getOrNull(i + 1)
+        if (arg.startsWith("-") && next != null && !next.startsWith("-")) {
+            addOption(arg, next)
+            i += 2
+        } else {
+            addOption(arg)
+            i += 1
+        }
+    }
+}
+
+/**
+ * The advanced settings in force, kept in memory so a request can read them without waiting
+ * on storage. Filled from storage as the app starts and on every change.
+ */
+object AdvancedSettingsStore {
+    @Volatile
+    var current: AdvancedSettings = AdvancedSettings()
+        internal set(value) {
+            field = value
+            loaded = true
+        }
+
+    @Volatile
+    private var loaded = false
+
+    /** Reads the stored settings. Set by the app as it starts. */
+    @Volatile
+    internal var loader: (() -> AdvancedSettings)? = null
+
+    /**
+     * The settings in force, read from storage first if that has not happened yet. For a
+     * caller that must not act on the defaults, such as a connection that has to know
+     * whether to go through the proxy. Waits on storage only until it has been read once.
+     */
+    fun ready(): AdvancedSettings {
+        val load = loader
+        // The main thread is never held up for it: nothing connects from there, and a read
+        // from there only misses the cache once.
+        if (!loaded && load != null && android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) {
+            val stored = runCatching(load).getOrNull()
+            if (stored != null && !loaded) current = stored
+        }
+        return current
+    }
+}

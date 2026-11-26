@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SRC = REPO_ROOT / "app/src/main/java/com/hazel/android"
+SRC = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter"
 RES = REPO_ROOT / "app/src/main/res"
 
 PASS_COUNT = 0

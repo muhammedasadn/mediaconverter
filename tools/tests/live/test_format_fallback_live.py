@@ -38,7 +38,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-VIEW_MODEL = os.path.join(ROOT, "app/src/main/java/com/hazel/android/download/DownloadViewModel.kt")
+VIEW_MODEL = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter/download/DownloadViewModel.kt")
 
 # ── The app's expressions, kept word for word with DownloadViewModel ───────────────────
 NEAREST_VIDEO = "bv*+ba/b"

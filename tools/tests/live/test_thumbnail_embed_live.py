@@ -43,7 +43,7 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-VIEW_MODEL = os.path.join(ROOT, "app/src/main/java/com/hazel/android/download/DownloadViewModel.kt")
+VIEW_MODEL = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter/download/DownloadViewModel.kt")
 
 # ── The app's flags, kept word for word with DownloadViewModel ──────────────────────────
 # yt-dlp splits --ppa values like a shell; the double quotes keep the single quotes that

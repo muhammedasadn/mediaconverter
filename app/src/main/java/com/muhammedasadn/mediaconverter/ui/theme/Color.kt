@@ -1,0 +1,141 @@
+package com.muhammedasadn.mediaconverter.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Dark Theme — Primary background: #0A0A0A
+val DarkBackground = Color(0xFF0A0A0A)
+val DarkSurface = Color(0xFF141414)
+val DarkSurfaceVariant = Color(0xFF1E1E1E)
+val DarkOnBackground = Color(0xFFE0E0E0)
+val DarkOnSurface = Color(0xFFCCCCCC)
+
+/**
+ * Secondary text on a dark surface: labels, one-line explanations, units beside a value.
+ *
+ * Named rather than left to Material, whose dark default is a violet-tinted grey that sits
+ * oddly against the neutral greys everything else here is built from. Light enough to read
+ * at a glance, which is the point of setting it: the alternative was dimming the primary
+ * colour down with alpha, and that lands somewhere unreadable on one theme or the other.
+ */
+val DarkOnSurfaceVariant = Color(0xFFAFAFAF)
+
+// Container tones for the dark theme, lightest last. Named one by one rather than left to
+// Material, whose dark defaults derive their container tones from a violet neutral: the
+// search field took the highest of them and read as a lilac bar across the top of an
+// otherwise black screen.
+val DarkSurfaceContainerLowest = Color(0xFF070707)
+val DarkSurfaceContainerLow = Color(0xFF101010)
+val DarkSurfaceContainer = Color(0xFF151515)
+val DarkSurfaceContainerHigh = Color(0xFF1A1A1A)
+val DarkSurfaceContainerHighest = Color(0xFF1F1F1F)
+val DarkOutline = Color(0xFF3A3A3A)
+val DarkOutlineVariant = Color(0xFF242424)
+
+// Light Theme — a warm paper ground rather than a neutral white.
+//
+// A pure white background under a full-bleed thumbnail reads as glare, and Material's own
+// light defaults tint their container tones violet, which fought the accent in the search
+// field and the navigation bar. Every tone here is mixed towards paper instead, so the
+// surfaces stay quiet and the accent is the only colour on the screen.
+//
+// The warmth is carried at low saturation on purpose. The search field and the navigation
+// bar take the highest container tones and cover a lot of the screen, so a beige strong
+// enough to read as a colour on a small swatch reads as a stain across a whole bar. These
+// are warm against white and neutral against each other, which is the balance that lets the
+// artwork on the cards be the only saturated thing in view.
+val LightBackground = Color(0xFFF7F5F1)
+val LightSurface = Color(0xFFFDFCFA)
+val LightSurfaceVariant = Color(0xFFECE8E1)
+val LightOnBackground = Color(0xFF1F1D1A)
+val LightOnSurface = Color(0xFF44413B)
+val LightOnSurfaceVariant = Color(0xFF5E5A53)
+val LightOutline = Color(0xFF8D8880)
+val LightOutlineVariant = Color(0xFFDEDAD2)
+
+// Container tones, lightest to darkest. Cards sit on the lower ones; the search field and
+// the navigation bar take the higher ones, which is what gives them an edge against the
+// background without needing a border to carry it.
+val LightSurfaceContainerLowest = Color(0xFFFFFEFC)
+val LightSurfaceContainerLow = Color(0xFFFAF8F5)
+val LightSurfaceContainer = Color(0xFFF5F2EE)
+val LightSurfaceContainerHigh = Color(0xFFF0EDE8)
+val LightSurfaceContainerHighest = Color(0xFFEAE6E0)
+val LightSurfaceBright = Color(0xFFFDFCFA)
+val LightSurfaceDim = Color(0xFFE2DED7)
+val LightInverseSurface = Color(0xFF34322E)
+val LightInverseOnSurface = Color(0xFFF7F4EF)
+
+// Default Brand — Hazel Cyan
+val HazelCyan = Color(0xFF00BCD4)
+val HazelCyanDark = Color(0xFF00ACC1)
+val HazelCyanLight = Color(0xFF00838F)
+val HazelCyanContainer = Color(0xFF002B31)
+val HazelCyanContainerLight = Color(0xFFB2EBF2)
+
+// Status Colors
+val SuccessGreen = Color(0xFF4CAF50)
+// Errors in a true red. The dark theme's used to be Material's dusty pink, which read
+// as a faded mark rather than as something gone wrong.
+val ErrorRed = Color(0xFFE53935)
+val ErrorRedLight = Color(0xFFD32F2F)
+val WarningAmber = Color(0xFFFFB74D)
+val InfoBlue = Color(0xFF64B5F6)
+
+// Format badges
+//
+// The size is the figure a format list is scanned for, so it carries a colour of its own
+// rather than another tone of the accent, which the codec and the bitrate beside it already
+// use. Fixed rather than themed on purpose: the accent is a personal choice and this is a
+// piece of information, and it should read the same whichever colour the app is set to.
+//
+// A deep steel blue: far enough from the default cyan accent to read as its own thing, dark
+// enough that its pale label holds on the paper ground of the light theme as well as on black.
+val SizeBadgeContainer = Color(0xFF1F3A5C)
+val SizeBadgeContent = Color(0xFFD3E5FF)
+val IdBadgeContainer = Color(0xFF5E1A33)
+val IdBadgeContent = Color(0xFFFFD9E3)
+
+// Progress
+val ProgressTrackDark = Color(0xFF1A1A1A)
+val ProgressTrackLight = Color(0xFFE0E0E0)
+
+/** Brand spark colours for the splash and the header logo, the same in every theme and accent. */
+val HazelSpark = listOf(Color(0xFF16B8E6), Color(0xFF3D5BFF), Color(0xFFFF4FA8), Color(0xFFFFAE2C))
+
+// ── Accent Color Palette (ChatGPT-style picker) ──
+data class AccentColor(
+    val name: String,
+    val dark: Color,           // primary in dark theme
+    val light: Color,          // primary in light theme
+    val containerDark: Color,  // primaryContainer in dark
+    val containerLight: Color  // primaryContainer in light
+)
+
+val AccentColors = listOf(
+    AccentColor("White",      Color(0xFFE0E0E0), Color(0xFF616161), Color(0xFF1A1A1A), Color(0xFFF5F5F5)),
+    AccentColor("Blush",      Color(0xFFFFB1C8), Color(0xFFA3264F), Color(0xFF3A0F1E), Color(0xFFFFE3EC)),
+    AccentColor("Powder",     Color(0xFFA8CBFF), Color(0xFF2B5C9E), Color(0xFF0E2440), Color(0xFFDCEBFF)),
+    AccentColor("Sage",       Color(0xFFA8E0B8), Color(0xFF2F6B45), Color(0xFF0E2A18), Color(0xFFDDF3E3)),
+    AccentColor("Peach",      Color(0xFFFFC8A8), Color(0xFFA4502A), Color(0xFF3A1A0C), Color(0xFFFFE8DA)),
+    AccentColor("Cyan",       Color(0xFF00BCD4), Color(0xFF00838F), Color(0xFF002B31), Color(0xFFB2EBF2)),
+    AccentColor("Sky",        Color(0xFF38BDF8), Color(0xFF0369A1), Color(0xFF06263A), Color(0xFFD6EFFF)),
+    AccentColor("Blue",       Color(0xFF2196F3), Color(0xFF1565C0), Color(0xFF051E33), Color(0xFFBBDEFB)),
+    AccentColor("Indigo",     Color(0xFF5C6BC0), Color(0xFF283593), Color(0xFF0C1033), Color(0xFFC5CAE9)),
+    AccentColor("Violet",     Color(0xFF8B5CF6), Color(0xFF6D28D9), Color(0xFF1E1038), Color(0xFFEDE4FF)),
+    AccentColor("Lavender",   Color(0xFFC4B5FD), Color(0xFF6D5BBA), Color(0xFF231C3B), Color(0xFFF1EDFF)),
+    AccentColor("Purple",     Color(0xFFAB47BC), Color(0xFF7B1FA2), Color(0xFF200A29), Color(0xFFE1BEE7)),
+    AccentColor("Magenta",    Color(0xFFE040FB), Color(0xFFA21CAF), Color(0xFF2E0833), Color(0xFFFAE0FF)),
+    AccentColor("Pink",       Color(0xFFEC407A), Color(0xFFAD1457), Color(0xFF3B0720), Color(0xFFF8BBD0)),
+    AccentColor("Rose",       Color(0xFFFB7185), Color(0xFFBE123C), Color(0xFF3A0A16), Color(0xFFFFE4E8)),
+    AccentColor("Crimson",    Color(0xFFDC143C), Color(0xFFB00E30), Color(0xFF3A0612), Color(0xFFFFD1DA)),
+    AccentColor("Coral",      Color(0xFFFF7F50), Color(0xFFC2410C), Color(0xFF3A1408), Color(0xFFFFE0D3)),
+    AccentColor("Orange",     Color(0xFFFF9800), Color(0xFFE65100), Color(0xFF331400), Color(0xFFFFE0B2)),
+    AccentColor("Amber",      Color(0xFFFFB300), Color(0xFFB45309), Color(0xFF332200), Color(0xFFFFECB3)),
+    AccentColor("Gold",       Color(0xFFFFD600), Color(0xFFC49000), Color(0xFF332B00), Color(0xFFFFF8E1)),
+    AccentColor("Lime",       Color(0xFFA3E635), Color(0xFF4D7C0F), Color(0xFF1E2B06), Color(0xFFECFCCB)),
+    AccentColor("Green",      Color(0xFF4CAF50), Color(0xFF2E7D32), Color(0xFF0A290B), Color(0xFFC8E6C9)),
+    AccentColor("Mint",       Color(0xFF34D399), Color(0xFF047857), Color(0xFF052E22), Color(0xFFD1FAE8)),
+    AccentColor("Teal",       Color(0xFF009688), Color(0xFF00695C), Color(0xFF001F1B), Color(0xFFB2DFDB)),
+    AccentColor("Mocha",      Color(0xFFBCAAA4), Color(0xFF6D4C41), Color(0xFF2A1F1B), Color(0xFFEFE6E2)),
+    AccentColor("Slate",      Color(0xFF94A3B8), Color(0xFF475569), Color(0xFF151B24), Color(0xFFE2E8F0)),
+)

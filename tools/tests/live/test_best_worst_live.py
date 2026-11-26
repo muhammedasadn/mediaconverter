@@ -43,7 +43,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-KOTLIN = os.path.join(ROOT, "app/src/main/java/com/hazel/android/download")
+KOTLIN = os.path.join(ROOT, "app/src/main/java/com/muhammedasadn/mediaconverter/download")
 
 # Short videos with several qualities, from sources that read differently.
 LINKS = [

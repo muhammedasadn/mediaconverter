@@ -230,7 +230,7 @@ jobs:
           # version that got built. Without it a misconfigured build publishes quietly.
           CHANNEL=${{ steps.version.outputs.channel }}
           for ABI in universal armeabi-v7a x86 x86_64 arm64-v8a; do
-            APK="artifacts/Hazel-v${{ steps.version.outputs.version }}-$ABI-$CHANNEL.apk"
+            APK="artifacts/MediaConverter-v${{ steps.version.outputs.version }}-$ABI-$CHANNEL.apk"
             if [ ! -f "$APK" ]; then
               echo "::error::The build did not produce $APK. It produced: $(ls artifacts | tr '\n' ' ')"
               exit 1
@@ -238,7 +238,7 @@ jobs:
           done
 
           {
-            echo "## Hazel ${{ steps.version.outputs.tag }}"
+            echo "## Media Converter ${{ steps.version.outputs.tag }}"
             echo
             for apk in artifacts/*.apk; do
               echo "- \`$(basename "$apk")\` ($(du -h "$apk" | cut -f1))"
@@ -253,35 +253,13 @@ jobs:
           Most devices are arm64 - Not sure?
           Download the universal build, it works on everything
 
-          Wondering what's different? Here's [Hazel ${{ steps.version.outputs.version }} release notes.](https://sibtainocn.github.io/Hazel/hazel/whats-new.html)
+          Wondering what's different? Here's [Media Converter ${{ steps.version.outputs.version }} release notes.](https://muhammedasadn.github.io/mediaconverter/hazel/whats-new.html)
 
           > 💡 **Note**: GitHub APKs have the in-app updater, so new releases are auto-detected and downloadable without visiting this page. F-Droid APKs don't, since F-Droid handles updates on its own.
 
           ---
 
-          <div align="center">
-
-          <table>
-            <tr>
-              <td align="center" width="25%"><a href="https://github.com/SibtainOcn/Hazel/releases/latest"><img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" alt="GitHub" width="100%"></a></td>
-              <td align="center" width="25%"><a href="https://f-droid.org/packages/com.hazel.android/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="F-Droid" width="100%"></a></td>
-              <td align="center" width="25%"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/SibtainOcn/Hazel"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Obtainium" width="100%"></a></td>
-              <td align="center" width="25%"><a href="https://www.openapk.net/hazel/com.hazel.android/"><img src="https://www.openapk.net/images/openapk-badge.png" alt="OpenAPK" width="100%"></a></td>
-            </tr>
-          </table>
-
-          </div>
-
-          ---
-
-          If **Hazel** made your downloads easier and you want to support open-source development:
-
-          [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="50">](https://www.buymeacoffee.com/sibtainocean)
-
-          * **GitHub Sponsors:** [github.com/sponsors/SibtainOcn](https://github.com/sponsors/SibtainOcn)
-          * **More ways to help:** [Support page](https://sibtainocn.github.io/Hazel/hazel/support.html)
-
-          ⭐ Enjoying Hazel? A star on the repo helps others find it.
+          ⭐ Enjoying Media Converter? A star on the repo helps others find it.
           NOTES
 
       - name: Publish the release
@@ -292,7 +270,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           # The leaf leads the title so a release is recognisable in a list of them at a
           # glance, before any of the words are read.
-          name: "🌿 Hazel ${{ steps.version.outputs.tag }}"
+          name: "Media Converter ${{ steps.version.outputs.tag }}"
           body_path: release-notes.md
           prerelease: ${{ steps.version.outputs.prerelease }}
           make_latest: ${{ steps.version.outputs.prerelease != 'true' }}

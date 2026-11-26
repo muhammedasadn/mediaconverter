@@ -23,10 +23,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DL = REPO_ROOT / "app/src/main/java/com/hazel/android/download"
+DL = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/download"
 VM = DL / "DownloadViewModel.kt"
 CUT = DL / "CutProgress.kt"
-KT_TEST = REPO_ROOT / "app/src/test/java/com/hazel/android/download/CutProgressTest.kt"
+KT_TEST = REPO_ROOT / "app/src/test/java/com/muhammedasadn/mediaconverter/download/CutProgressTest.kt"
 MASTER = REPO_ROOT / "tools/tests/test_all.py"
 
 PASS_COUNT = 0
@@ -296,7 +296,7 @@ def test_structure():
     check_true("Kotlin unit test exists and covers overflow and bad input",
                KT_TEST.exists() and "does not overflow" in KT_TEST.read_text(encoding="utf-8")
                and "Double.NaN" in KT_TEST.read_text(encoding="utf-8"))
-    check_true("package line matches the folder", CUT.read_text(encoding="utf-8").startswith("package com.hazel.android.download"))
+    check_true("package line matches the folder", CUT.read_text(encoding="utf-8").startswith("package com.muhammedasadn.mediaconverter.download"))
     check_true("the master runner runs this harness", "test_cut_progress.py" in MASTER.read_text(encoding="utf-8"))
 
 
@@ -423,15 +423,15 @@ def is_download_ffmpeg(args, roots):
 
 def test_stop_spares_converter():
     print("\n[7] Stopping a download ends only a download's ffmpeg")
-    roots = ["/storage/emulated/0/Android/data/com.hazel.android/files/Hazel/"]
+    roots = ["/storage/emulated/0/Android/data/com.muhammedasadn.mediaconverter/files/Hazel/"]
     ffmpeg = "/data/app/lib/arm64/libffmpeg.so"
     cut = [ffmpeg, "-y", "-ss", "12.0", "-t", "13.5", "-i", "https://cdn/v.mp4", "-c", "copy", "-f", "mp4",
            "file:" + roots[0] + "dl_0123456789abcdef/Clip.mp4.part"]
     embed = [ffmpeg, "-y", "-i", "file:" + roots[0] + "dl_0123456789abcdef/Clip.mp4",
              "file:" + roots[0] + "dl_0123456789abcdef/Clip.temp.mp4"]
-    convert = [ffmpeg, "-y", "-i", "file:/data/user/0/com.hazel.android/cache/convert_input_1.m4a",
+    convert = [ffmpeg, "-y", "-i", "file:/data/user/0/com.muhammedasadn.mediaconverter/cache/convert_input_1.m4a",
                "-vn", "-acodec", "libmp3lame",
-               "file:/storage/emulated/0/Android/data/com.hazel.android/files/Music/Song.mp3"]
+               "file:/storage/emulated/0/Android/data/com.muhammedasadn.mediaconverter/files/Music/Song.mp3"]
     probe = ["/data/app/lib/arm64/libffprobe.so", "file:" + roots[0] + "dl_0123456789abcdef/Clip.mp4"]
     check_true("a cut being written is ended", is_download_ffmpeg(cut, roots))
     check_true("a post-processing step on a download is ended", is_download_ffmpeg(embed, roots))
@@ -447,7 +447,7 @@ def test_stop_spares_converter():
     check_true("every stop still ends a download's ffmpeg", "killStrayFfmpeg()" in function_body(engine, "fun stop("))
 
 
-QUEUE_SCREEN = REPO_ROOT / "app/src/main/java/com/hazel/android/ui/screens/queue/QueueScreen.kt"
+QUEUE_SCREEN = REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/ui/screens/queue/QueueScreen.kt"
 
 
 def test_paused_cut():
@@ -701,7 +701,7 @@ def test_trim_after_download():
                "hasSection && trimAfterDownload && !preciseCuts && canTrimAfterDownload" in opt
                and "!splitByChapters && !liveFromStart" in opt and "sponsorBlockFilters.any" in opt)
     check_true("a quick cut is the default", "val cutMode: CutMode = CutMode.QUICK" in opt)
-    settings = (REPO_ROOT / "app/src/main/java/com/hazel/android/data/SettingsRepository.kt").read_text(encoding="utf-8")
+    settings = (REPO_ROOT / "app/src/main/java/com/muhammedasadn/mediaconverter/data/SettingsRepository.kt").read_text(encoding="utf-8")
     check_true("the cut mode is saved with the other download settings",
                'stringPreferencesKey("${prefix}cut_mode")' in settings
                and "this[keys.cutMode] = options.cutMode.name" in settings)
