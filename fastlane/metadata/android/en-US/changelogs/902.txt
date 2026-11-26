@@ -1,0 +1,6 @@
+* Hazel Instant is back: share a link to it and it downloads right away with your saved settings
+* Redesigned set-of-links and download sheets
+* Save downloads to an SD card
+* New Hazel website with guide, FAQ and support pages
+* Fixed: a quality picked before a shared link was read reset to the default
+* Other bug fixes and improvements

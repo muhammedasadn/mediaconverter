@@ -1,0 +1,74 @@
+# ── Gradle / build output ──
+.gradle/
+build/
+**/build/
+/captures
+.externalNativeBuild
+.cxx
+*.iml
+
+# ── Local machine config, never commit ──
+local.properties
+.idea/
+.kotlin/
+.DS_Store
+Thumbs.db
+
+# ── Signing material, never commit ──
+#
+# Matched by extension as well as by name, because the one that leaks is always the copy
+# someone renamed. The base64 forms are here too: that is how a keystore is handed to CI,
+# and a keystore is no less a keystore for having been text at the time.
+signing.properties
+keystore.properties
+secrets.properties
+hazel-dlp-release
+*.jks
+*.jks.*
+*.keystore
+*.keystore.*
+*.p12
+*.pfx
+*.pepk
+*.pem
+*.der
+*.key
+*.base64
+*.b64
+/signing/
+google-services.json
+.claude
+# ── Environment files ──
+.env
+.env.*
+!.env.example
+
+# ── Build artifacts ──
+/release/
+/app/release/
+*.apk
+*.aab
+*.ap_
+*.dm
+*.hprof
+*.log
+build_output.txt
+artifacts/
+release-notes.md
+!/RELEASE-NOTES.md
+
+# ── Reference checkouts and scratch ──
+/temp/
+ISSUES.md
+DISCORD-PLAN.md
+
+# ── Terraform: secrets and generated state ──
+main.tf
+*.tfvars
+**/.terraform/
+*.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+pages/hazel-pages/_build/
+
+__pycache__/

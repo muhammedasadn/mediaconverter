@@ -1,0 +1,188 @@
+package com.hazel.android.ui.screens.download
+
+import com.hazel.android.ui.theme.sheetBlackColor
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import com.hazel.android.ui.components.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.hazel.android.R
+import androidx.compose.ui.unit.sp
+import com.hazel.android.download.languageLabel
+import com.hazel.android.ui.components.keepFlingInSheet
+
+/**
+ * Which soundtrack a download takes.
+ *
+ * Built like the format sheet, because it is the same kind of question asked of the same
+ * media: a list of what the source published, with the current answer marked. Only shown
+ * where there is a choice, which is rare; most media has one soundtrack and this never
+ * appears for it.
+ *
+ * The first entry is the source's own default. It stays selectable rather than being
+ * dropped once a language is picked, since going back to whatever the uploader called the
+ * original is otherwise impossible without knowing which one that was.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AudioLanguageSheet(
+    languages: List<String>,
+    selected: String?,
+    onPick: (String?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
+
+    // The tag, the name and whether this is the row that is currently set, worked out once
+    // rather than per frame.
+    val rows = remember(languages, selected) {
+        listOf(LanguageRow(null, "Source default", selected == null)) +
+                languages.map { code -> LanguageRow(code, languageLabel(code), code == selected) }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = sheetBlackColor
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 12.dp)
+            ) {
+                Text(
+                    stringResource(R.string.audio_language_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.audio_language_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .keepFlingInSheet(),
+                contentPadding = WindowInsets.navigationBars
+                    .asPaddingValues()
+                    .let { PaddingValues(bottom = it.calculateBottomPadding() + 24.dp) }
+            ) {
+                items(
+                    count = rows.size,
+                    key = { rows[it].code ?: "default" }
+                ) { index ->
+                    val row = rows[index]
+                    LanguageRow(row = row, onClick = { onPick(row.code) })
+                }
+            }
+        }
+    }
+}
+
+/** One line of the sheet: a code, what it is called, and whether it is the current answer. */
+private data class LanguageRow(
+    val code: String?,
+    val label: String,
+    val selected: Boolean
+)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun LanguageRow(row: LanguageRow, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = if (row.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        else Color.Transparent
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(MaterialShapes.Cookie7Sided.toShape())
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                val code = row.code?.uppercase() ?: "AUTO"
+                Text(
+                    code,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontSize = when {
+                        code.length > 4 -> 10.5.sp
+                        code.length == 4 -> 13.sp
+                        else -> 15.sp
+                    },
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                row.label,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = if (row.selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+
+            if (row.selected) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}

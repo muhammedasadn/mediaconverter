@@ -1,0 +1,8 @@
+* Search by words and play videos right on the home cards
+* Cut with a live preview, record live streams from the start
+* New Synthesizing, Advanced and Backup screens
+* Steadier YouTube reads with on-device PO tokens
+* Queue card now shows the real download state
+* Fixed long titles, chapter splits and subtitles failing downloads
+* Fixed engine updates breaking downloads in progress
+* Playlists no longer open as a single song

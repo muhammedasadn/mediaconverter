@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!--
+        Lets the app ask to be exempt from battery optimisation. A download is a long
+        network job, and without the exemption the system suspends it shortly after the
+        app leaves the foreground. The user is only ever asked through the system's own
+        screen; nothing is granted silently.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!--
+         What the app is allowed to see of the rest of the device. From Android 11 an app
+         cannot resolve an intent at another package without saying so, and the sheet offers
+         to open a link where it belongs: in the site's own app when it is installed, in the
+         browser otherwise.
+    -->
+    <queries>
+        <package android:name="com.google.android.youtube" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- File managers, so a folder can be offered to every one installed. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="vnd.android.document/directory" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="resource/folder" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="inode/directory" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".HazelApp"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
+        android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config"
+        android:theme="@style/Theme.Hazel">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:configChanges="locale|layoutDirection|orientation|screenSize|smallestScreenSize|screenLayout"
+            android:theme="@style/Theme.Hazel.Splash">
+
+            <!-- Normal launcher -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!--
+            The share target. A link shared from another app opens its download sheet over
+            that app at once, and the sheet fills in while the link is read.
+        -->
+        <activity
+            android:name=".ui.share.ShareOverlayActivity"
+            android:exported="true"
+            android:label="@string/share_label_video"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.Hazel.Overlay"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="locale|layoutDirection|orientation|screenSize|smallestScreenSize|screenLayout">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Hazel Instant: the second share target. It reads the shared link and downloads it
+            with the saved settings, showing only a small confirmation over the app.
+        -->
+        <activity-alias
+            android:name=".InstantShareActivity"
+            android:targetActivity=".ui.share.ShareOverlayActivity"
+            android:exported="true"
+            android:label="@string/instant_label"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Hazel Images: reads the shared link with gallery-dl and opens the gallery sheet. -->
+        <activity-alias
+            android:name=".GalleryShareActivity"
+            android:targetActivity=".ui.share.ShareOverlayActivity"
+            android:exported="true"
+            android:label="@string/share_label_images"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Instant Images: queues the whole shared post with the saved gallery settings. -->
+        <activity-alias
+            android:name=".InstantGalleryShareActivity"
+            android:targetActivity=".ui.share.ShareOverlayActivity"
+            android:exported="true"
+            android:label="@string/instant_images_label"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <!--
+             Holds the process open while a download runs. It does no work of its own: the
+             queue lives in the app, and this only stops the system stopping it.
+        -->
+        <service
+            android:name=".download.DownloadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!--
+             Carries the notification's Pause, Resume and Cancel buttons to the download
+             they belong to. Not exported: nothing outside the app has any business
+             stopping a download the user started.
+        -->
+        <receiver
+            android:name=".download.DownloadActionReceiver"
+            android:exported="false" />
+
+        <!-- Home-screen widget: Paste, Audio, Queue and Downloads. -->
+        <receiver
+            android:name=".widget.QuickActionsWidget"
+            android:exported="true"
+            android:label="@string/widget_quick_actions_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_actions_widget_info" />
+        </receiver>
+
+        <!-- Reads the copied link for the widget's Paste and Audio, then gets out of the way. -->
+        <activity
+            android:name=".widget.WidgetClipActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Hazel.Overlay" />
+
+        <!-- Sign-in browser used to collect cookies for gated media -->
+        <activity
+            android:name=".ui.screens.cookies.CookieWebViewActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:theme="@style/Theme.Hazel" />
+
+        <!-- FileProvider for opening downloaded files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+</manifest>

@@ -1,0 +1,28 @@
+# Live verification scripts
+
+Scripts that run the real yt-dlp and ffmpeg against real links and local stand-in files,
+to prove that the download flags the app builds actually work. They are **not** part of
+`tools/tests/test_all.py`: they need the network and take minutes. Run them by hand whenever
+the flags in `DownloadViewModel.buildRequest` change.
+
+Setup (Python 3):
+
+    pip install -U yt-dlp mutagen
+    # plus ffmpeg and ffprobe on the PATH
+
+| Script | What it proves |
+|---|---|
+| `test_thumbnail_embed_live.py` | Cover art is embedded, and cropped square when asked, for every audio format and video container the sheet offers, on real sites and on awkward local formats (OGV, FLV, AVI, TS, WebM, WAV, AIFF, WMA, AC3, MKA). A cover never fails a download. |
+| `test_po_token_live.mjs` | The in-app PO token page (`app/src/main/assets/po_token.html`) mints real tokens when run in Chromium from the youtube.com address the app gives it, reuses its session for later mints, and with `--verify` yt-dlp lists a video's formats with those tokens. Needs Node and Playwright: `NODE_PATH=$(npm root -g) node tools/tests/live/test_po_token_live.mjs --verify`. Set `JS_RUNTIME` to point yt-dlp at a Node it supports, and `HARNESS_ROUTE_REQUESTS=1` behind a proxy whose certificate Chromium does not trust. |
+| `test_playback_live.py` | The in-app player's stream choice (mirrored from `StreamResolver.pick`) plays real links: the chosen file, HLS playlist or DASH manifest is fetched with the player's headers and checked to be media. 15 sites passed (Reddit, JioSaavn, SoundCloud, Bandcamp, Bilibili, Twitch, archive.org, PeerTube, Imgur, 9GAG, BitChute, Bluesky, Medal, Streamable); sites that refuse the test network are SKIP. |
+| `test_best_worst_live.py` | The format list's Best quality and Worst quality rows really get the best and the worst a link offers, for video (tallest/shortest picture, with sound) and audio (the source's top/bottom quality tier, else the highest/lowest bitrate), with and without a preferred codec. Checked on a replayed read and a fresh one (incognito), each with and without a cookie file; `HAZEL_COOKIES=<file>` uses a real sign-in. Nothing is downloaded. |
+| `test_instant_live.py` | Hazel Instant downloads what "Instant saves as" asks for: with Audio only, the format Instant picks (best audio-only stream, or best audio extracted from a combined file) gives a sound-only file in every audio format and bitrate Synthesizing offers, with its cover, and a preferred language the source lacks still downloads; with Video, picture and sound. Uses the `yt-dlp` executable rather than the Python module. |
+| `test_shared_links_live.py` | Shared links read the way Instant reads them give one download per card, each a different item: multi-video X posts (each video numbered with `#hazel-item=N` and fetched with `--playlist-items N`, since `--no-playlist` still takes the whole post), single-video posts, and a YouTube video shared from a Mix (read as that video alone). Also prints what the old request fetched. `--download` fetches one item for real and checks picture and sound. |
+| `test_sponsorblock_live.py` | SponsorBlock removal really cuts the segments from audio and video, marking writes them as chapters, other sites skip it cleanly, and a cookie file changes nothing. |
+
+Each script also has a `--static` mode, which needs no network: it checks that the flags
+it tests are the ones the Kotlin passes, so the scripts and the app cannot drift apart.
+
+A site that refuses the network the run is on (for example one asking a server address to
+sign in) is reported as SKIP, not FAIL. The SponsorBlock script then falls back to a local
+stand-in carrying the real video id, so the real segments are still fetched and cut.

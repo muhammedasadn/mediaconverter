@@ -1,0 +1,132 @@
+package com.hazel.android.download.playback
+
+import android.content.Context
+import androidx.annotation.OptIn
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import com.hazel.android.download.NetworkProxy.throughProxy
+import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.dash.DashMediaSource
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.MergingMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+
+/**
+ * Builds players and the sources they play. Media3 is set up here and nowhere else, so a
+ * change in its API is fixed in this file.
+ */
+@OptIn(UnstableApi::class)
+object PlayerFactory {
+
+    fun create(context: Context): ExoPlayer {
+        // A short start buffer, so playback begins as soon as a few seconds have arrived.
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(START_BUFFER_MS, MAX_BUFFER_MS, PLAYBACK_BUFFER_MS, REBUFFER_MS)
+            .build()
+        val attributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+            .build()
+        return ExoPlayer.Builder(context.applicationContext)
+            .setLoadControl(loadControl)
+            .setAudioAttributes(attributes, true)
+            .setHandleAudioBecomingNoisy(true)
+            .build()
+    }
+
+    /**
+     * One client for every stream, so connections are reused between the video and its
+     * audio. It goes through the proxy like the rest of the app, and answers the proxy's
+     * request for a password, which Android's own HTTP stack does not pass on.
+     */
+    private val http by lazy { okhttp3.OkHttpClient.Builder().throughProxy().build() }
+
+    fun sourceFor(stream: PlayableStream): MediaSource {
+        val main = source(stream.url, stream.headers, stream.isHls, stream.isDash)
+        val audio = stream.audioUrl?.let { source(it, stream.audioHeaders, isHls = false, isDash = false) }
+        return if (audio != null) MergingMediaSource(main, audio) else main
+    }
+
+    private fun source(url: String, headers: Map<String, String>, isHls: Boolean, isDash: Boolean): MediaSource {
+        val agent = headers.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value
+        val http = OkHttpDataSource.Factory(http)
+            .setUserAgent(agent ?: BROWSER_USER_AGENT)
+            .setDefaultRequestProperties(headers.filterKeys { !it.equals("User-Agent", ignoreCase = true) })
+        val item = MediaItem.fromUri(url)
+        val path = url.substringBefore('?')
+        return if (isDash || path.endsWith(".mpd")) {
+            DashMediaSource.Factory(http).createMediaSource(item)
+        } else if (isHls || path.endsWith(".m3u8")) {
+            HlsMediaSource.Factory(http).createMediaSource(item)
+        } else {
+            val reader = if (ChunkedDataSource.needsChunks(url)) ChunkedDataSource.Factory(http) else http
+            ProgressiveMediaSource.Factory(reader).createMediaSource(item)
+        }
+    }
+
+    /** Keeps an adaptive stream within the chosen quality, measured on the shorter side. */
+    fun applyCap(player: ExoPlayer, stream: PlayableStream) {
+        val builder = player.trackSelectionParameters.buildUpon()
+        when {
+            stream.adaptiveCap <= 0 -> builder.clearVideoSizeConstraints()
+            stream.portrait -> builder.setMaxVideoSize(stream.adaptiveCap, Int.MAX_VALUE)
+            else -> builder.setMaxVideoSize(Int.MAX_VALUE, stream.adaptiveCap)
+        }
+        player.trackSelectionParameters = builder.build()
+    }
+
+    /**
+     * Starts a manifest on the wished language, or on its main track when there is no wish.
+     * A pick left from an earlier stream is cleared, as its tracks are gone.
+     */
+    fun applyAudio(player: ExoPlayer, stream: PlayableStream) {
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+            .setPreferredAudioLanguage(stream.preferredLanguage.takeIf { stream.isAdaptive })
+            .build()
+    }
+
+    /** The sound tracks inside a manifest, one per language, when there is more than one. */
+    fun manifestAudioTracks(tracks: Tracks): List<AudioTrack> {
+        val list = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO && it.length > 0 }.map { group ->
+            val format = group.getTrackFormat(0)
+            AudioTrack(
+                id = group.mediaTrackGroup.id,
+                language = format.language?.takeIf { it.isNotBlank() && it != C.LANGUAGE_UNDETERMINED },
+                original = format.roleFlags and C.ROLE_FLAG_MAIN != 0 ||
+                    format.selectionFlags and C.SELECTION_FLAG_DEFAULT != 0,
+                descriptive = format.roleFlags and C.ROLE_FLAG_DESCRIBES_VIDEO != 0
+            )
+        }.distinctBy { it.language to it.descriptive }
+        return if (list.size > 1) list else emptyList()
+    }
+
+    /** The manifest track playing now, by [AudioTrack.id]. */
+    fun selectedManifestAudio(tracks: Tracks): String? =
+        tracks.groups.firstOrNull { it.type == C.TRACK_TYPE_AUDIO && it.isSelected }?.mediaTrackGroup?.id
+
+    /** Plays the manifest track [id]; false when the manifest no longer has it. */
+    fun selectManifestAudio(player: ExoPlayer, id: String): Boolean {
+        val group = player.currentTracks.groups
+            .firstOrNull { it.type == C.TRACK_TYPE_AUDIO && it.mediaTrackGroup.id == id } ?: return false
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, (0 until group.length).toList()))
+            .build()
+        return true
+    }
+
+    private const val BROWSER_USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    private const val START_BUFFER_MS = 5_000
+    private const val MAX_BUFFER_MS = 50_000
+    private const val PLAYBACK_BUFFER_MS = 1_000
+    private const val REBUFFER_MS = 2_500
+}

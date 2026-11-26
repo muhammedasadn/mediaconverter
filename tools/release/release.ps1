@@ -1,0 +1,258 @@
+<#
+.SYNOPSIS
+    Cuts a Hazel release: checks the release notes, bumps the versions, checks the store changelogs and translations, tags, pushes.
+
+.DESCRIPTION
+    Every release moves the same four things, and every one of them is silent when it goes
+    wrong. A version code that did not move produces APKs Android refuses to install over
+    the last ones. A changelog file named after the old code leaves the new release with a
+    blank changelog on F-Droid. A tag pushed before the commit builds the wrong tree.
+
+    So this does all of it in one order, and refuses to start if the working tree is dirty
+    or the tag already exists.
+
+    Nothing here is destructive until the very last step. Use -DryRun to see the whole plan
+    without touching anything, and note that the push is the only part that leaves the
+    machine.
+
+.PARAMETER Version
+    The stable version being cut, without the leading v. For example 1.2.17. Betas are not
+    cut here: push a v1.2.17-beta.N tag. Nightlies come from the nightly workflow.
+
+.PARAMETER DryRun
+    Print what would happen and change nothing.
+
+.PARAMETER NoPush
+    Do everything locally, including the commit and the tag, but do not push. Useful when
+    you want to look at the commit before it becomes a release.
+
+.EXAMPLE
+    .\tools\release\release.ps1 -Version 1.2.17 -DryRun
+    .\tools\release\release.ps1 -Version 1.2.17
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$Version,
+
+    [switch]$DryRun,
+    [switch]$NoPush
+)
+
+$ErrorActionPreference = 'Stop'
+$repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+Set-Location $repo
+
+function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
+function Info($msg) { Write-Host "    $msg" -ForegroundColor Gray }
+function Warn($msg) { Write-Host "    $msg" -ForegroundColor Yellow }
+function Die($msg)  { Write-Host "`nSTOPPED: $msg" -ForegroundColor Red; exit 1 }
+
+$tag = "v$Version"
+$buildFile = Join-Path $repo 'app/build.gradle.kts'
+$changelog = Join-Path $repo 'CHANGELOG.md'
+
+# ---------------------------------------------------------------- release notes
+
+Step "Checking RELEASE-NOTES.md"
+
+# The website's What's new page shows this file as it is, so it must be rewritten for every
+# release. Checked before anything else: unchanged since the last tag means it still
+# describes the last release, and nothing here runs until it is updated.
+$notes = Join-Path $repo 'RELEASE-NOTES.md'
+git fetch --tags --quiet 2>$null
+$lastTag = git describe --tags --abbrev=0 --match 'v*' 2>$null
+$notesText = if (Test-Path $notes) { (Get-Content $notes -Raw -Encoding UTF8) } else { '' }
+if (-not "$notesText".Trim()) {
+    Die "Please update RELEASE-NOTES.md for $Version. It is missing or empty."
+}
+if ($lastTag) {
+    git diff --quiet $lastTag -- RELEASE-NOTES.md 2>$null; $changed = $LASTEXITCODE -ne 0
+    $dirtyNotes = git status --porcelain -- RELEASE-NOTES.md
+    if (-not $changed -and -not $dirtyNotes) {
+        Die "Please update RELEASE-NOTES.md for $Version. It has not changed since $lastTag, so it still describes that release."
+    }
+    Info "updated since $lastTag, good to go"
+} else {
+    Info "written, good to go"
+}
+
+# ---------------------------------------------------------------- checks
+
+Step "Checking the repository"
+
+if (-not (Test-Path $buildFile)) { Die "app/build.gradle.kts not found. Run this from the repo." }
+if (-not (Test-Path $changelog)) { Die "CHANGELOG.md not found." }
+
+$branch = (git rev-parse --abbrev-ref HEAD).Trim()
+Info "branch: $branch"
+if ($branch -ne 'main') {
+    Warn "You are not on main. A release is normally cut from main."
+}
+
+$dirty = git status --porcelain
+if ($dirty -and -not $DryRun) {
+    Die "The working tree has uncommitted changes. Commit or stash them first:`n$dirty"
+}
+
+git fetch --tags --quiet 2>$null
+$existing = git tag --list $tag
+if ($existing) { Die "Tag $tag already exists. Pick a new version; never move a published tag." }
+
+# Both live in defaultConfig as literals, because F-Droid reads them out of the file with a
+# regular expression rather than by running Gradle. Anything computed there is invisible to
+# it and its update check fails.
+$buildText = Get-Content $buildFile -Raw
+if ($buildText -notmatch '(?m)^\s*versionCode\s*=\s*(\d+)\s*$') {
+    Die "A literal 'versionCode = <number>' was not found in app/build.gradle.kts."
+}
+$oldCode = [int]$Matches[1]
+# The release channel formula (app/build.gradle.kts): a stable takes slot 99, so it sits
+# above every nightly and beta of its version. release.yml refuses any other code.
+$parts = $Version.Split('.') | ForEach-Object { [int]$_ }
+if ($parts[0] -gt 200 -or $parts[1] -gt 99 -or $parts[2] -gt 99) { Die "Version $Version is out of range (major up to 200, minor and patch up to 99)." }
+$newCode = (($parts[0] * 10000 + $parts[1] * 100 + $parts[2]) * 1000) + 990
+if ($newCode -le $oldCode) { Die "Version code $newCode for $Version is not above the current $oldCode. Pick a higher version." }
+
+if ($buildText -notmatch '(?m)^\s*versionName\s*=\s*"(.+?)"\s*$') {
+    Die "A literal 'versionName = \"x.y.z\"' was not found in app/build.gradle.kts."
+}
+$oldName = $Matches[1]
+
+Info "version name: $oldName -> $Version"
+Info "version code: $oldCode -> $newCode"
+
+# Each architecture takes the last digit, so one code numbers the whole release.
+$abis = [ordered]@{ universal = 0; 'armeabi-v7a' = 1; x86 = 2; x86_64 = 3; 'arm64-v8a' = 4 }
+Info "APK version codes:"
+foreach ($abi in $abis.Keys) {
+    '      {0,-12} {1}' -f $abi, ($newCode + $abis[$abi]) | Write-Host -ForegroundColor Gray
+}
+
+# ---------------------------------------------------------------- store changelogs
+
+Step "Checking the store changelogs"
+
+# These are written by hand: a release's notes are too long to cut down to F-Droid's 500
+# characters automatically. One file per APK version code, checked before anything is
+# written so a missing one stops the release with nothing changed.
+$changelogDir = 'fastlane/metadata/android/en-US/changelogs'
+$problems = @()
+foreach ($abi in $abis.Keys) {
+    $name = "$($newCode + $abis[$abi]).txt"
+    $path = Join-Path $changelogDir $name
+    if (-not (Test-Path $path)) {
+        $problems += "$name is missing"
+        continue
+    }
+    $length = (Get-Content $path -Raw -Encoding UTF8).Length
+    if ($length -eq 0) { $problems += "$name is empty" }
+    elseif ($length -gt 500) { $problems += "$name is $length characters, over F-Droid's 500" }
+    else { Info "$name ($length characters)" }
+}
+if ($problems) {
+    Die ("Write the store changelogs in $changelogDir first:`n    " + ($problems -join "`n    "))
+}
+
+# ---------------------------------------------------------------- translations
+
+Step "Checking the translations"
+
+# Stops on a translation that is wrong, or a listed language under 80%. A key not yet
+# translated only warns: Android shows the English for it, so it is safe to release.
+$py = if (Get-Command python -ErrorAction SilentlyContinue) { 'python' } else { 'python3' }
+$report = & $py tools/strings/check.py translations 2>&1
+if ($LASTEXITCODE -ne 0) {
+    $report | Where-Object { $_ -match '^FAIL' } | ForEach-Object { Warn $_ }
+    Die "The translations check failed. Run: python tools/strings/check.py translations"
+}
+$partial = $report | Where-Object { $_ -match '^\s+values-\S+\s+\d+%' -and $_ -notmatch '\s100%' }
+if ($partial) {
+    Warn "not fully translated, the rest shows in English:"
+    $partial | ForEach-Object { Warn $_.Trim() }
+} else {
+    Info "every language fully translated"
+}
+
+# ---------------------------------------------------------------- changelog
+
+Step "Checking CHANGELOG.md"
+
+$clText = Get-Content $changelog -Raw
+if ($clText -match "(?m)^##\s*\[$([regex]::Escape($Version))\]") {
+    Info "a [$Version] section already exists, leaving it alone"
+} elseif ($clText -match '(?m)^##\s*\[Unreleased\]\s*$') {
+    $today = Get-Date -Format 'yyyy-MM-dd'
+    Info "promoting [Unreleased] to [$Version] - $today"
+    # The Unreleased heading stays, empty, above the new one, ready for the next release.
+    $clText = $clText -replace '(?m)^##\s*\[Unreleased\]\s*$', "## [Unreleased]`r`n`r`n## [$Version] - $today"
+    if (-not $DryRun) { Set-Content $changelog $clText -NoNewline -Encoding UTF8 }
+} else {
+    Die "CHANGELOG.md has neither a [$Version] section nor an [Unreleased] heading to promote."
+}
+
+# ---------------------------------------------------------------- write
+
+Step "Updating app/build.gradle.kts"
+
+$newBuild = $buildText `
+    -replace '(?m)^(\s*)versionCode\s*=\s*\d+\s*$', "`${1}versionCode = $newCode" `
+    -replace '(?m)^(\s*)versionName\s*=\s*".+?"\s*$', "`${1}versionName = `"$Version`""
+
+if ($DryRun) {
+    Info "would write versionCode = $newCode and versionName = `"$Version`""
+} else {
+    Set-Content $buildFile $newBuild -NoNewline -Encoding UTF8
+    Info "written"
+}
+
+# ---------------------------------------------------------------- commit and tag
+
+Step "Committing and tagging"
+
+if ($DryRun) {
+    Info "would commit app/build.gradle.kts, CHANGELOG.md, RELEASE-NOTES.md and the changelogs"
+    Info "would tag $tag"
+    if (-not $NoPush) { Info "would push the branch and the tag to origin" }
+    Write-Host "`nDry run only. Nothing was changed." -ForegroundColor Green
+    exit 0
+}
+
+git add app/build.gradle.kts CHANGELOG.md RELEASE-NOTES.md fastlane/metadata/android/en-US/changelogs
+$staged = git diff --cached --name-only
+if (-not $staged) { Die "Nothing to commit. Was this release already prepared?" }
+Info ("staged: " + ($staged -join ', '))
+
+git commit -q -m "Release $Version"
+if ($LASTEXITCODE -ne 0) { Die "git commit failed." }
+
+git tag -a $tag -m "Hazel $tag"
+if ($LASTEXITCODE -ne 0) { Die "git tag failed. The commit is made; fix the tag and push by hand." }
+Info "tagged $tag at $(git rev-parse --short HEAD)"
+
+if ($NoPush) {
+    Write-Host "`nDone locally. Nothing pushed." -ForegroundColor Green
+    Write-Host "  git push origin $branch && git push origin $tag" -ForegroundColor Gray
+    exit 0
+}
+
+Step "Pushing"
+Warn "This publishes the release. The tag triggers the release workflow."
+
+# main is protected and rejects a direct push, so the branch goes up only when it can.
+git push origin $branch
+if ($LASTEXITCODE -ne 0) {
+    Warn "Pushing $branch was refused, which is expected when the branch is protected."
+    Warn "Open a pull request for the release commit, merge it, then push the tag:"
+    Warn "  git push origin $tag"
+    exit 1
+}
+
+git push origin $tag
+if ($LASTEXITCODE -ne 0) { Die "Pushing the tag failed. The commit is on $branch; push the tag by hand." }
+
+Write-Host "`nReleased $tag." -ForegroundColor Green
+Write-Host "  Watch the build:  gh run list --workflow=Release --limit 1" -ForegroundColor Gray
+Write-Host "  F-Droid picks this up on its own once the recipe is accepted." -ForegroundColor Gray

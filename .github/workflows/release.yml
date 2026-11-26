@@ -1,0 +1,321 @@
+name: Release
+
+# Pushing a version tag publishes a release.
+#
+#   git tag v1.0.1
+#   git push origin v1.0.1
+#
+# The tag selects the commit to build and names the release. It does not set the version:
+# the version lives in app/build.gradle.kts and the tag is checked against it, so a tag
+# that disagrees stops the release instead of publishing APKs that contradict their name.
+# A beta tag (v1.1.18-beta.1) publishes a GitHub-only pre-release named beta, with its
+# version taken from the tag. Nightlies are published by nightly.yml.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build a release from, for example v1.0.1"
+        required: true
+
+# Read-only by default. Only the publish job, which creates the release, may write.
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+
+jobs:
+  # A release is the one build nobody can take back, so the tests run before anything is
+  # packaged rather than alongside it.
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Summarise the run
+        if: always()
+        run: python3 .github/scripts/test_summary.py
+
+  release:
+    name: Build and publish
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    permissions:
+      contents: write
+
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+    steps:
+      # Full history, so anything written about the release can look back past the tag.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      # Where the version comes from.
+      #
+      # app/build.gradle.kts is the only place either version is written down, and that is
+      # forced rather than chosen. The F-Droid update check greps that file with a regular
+      # expression and never runs Gradle, so a version it cannot read as plain text in the
+      # file does not exist as far as it is concerned. gradle.properties, a -P argument and
+      # anything computed are all invisible to it, which is what broke the 1.0.5 recipe.
+      #
+      # So this step reads the same two literals the same way, and the tag is checked
+      # against them rather than fed into the build. Nothing here overrides the version:
+      # the build below runs the command the F-Droid server runs, so its APKs and these
+      # carry the same numbers by construction rather than by two copies of a number
+      # happening to agree.
+      - name: Read the version
+        id: version
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          BUILD_FILE=app/build.gradle.kts
+
+          VERSION_NAME=$(sed -n 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"\(.*\)".*$/\1/p' "$BUILD_FILE" | head -n 1)
+          VERSION_CODE=$(sed -n 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*\([0-9][0-9]*\).*$/\1/p' "$BUILD_FILE" | head -n 1)
+
+          if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ]; then
+            echo "::error::$BUILD_FILE has no literal versionName and versionCode in defaultConfig. Both have to stay literals there, because F-Droid reads them out of the file as text."
+            exit 1
+          fi
+
+          # A beta (v1.1.18-beta.2) is built for the GitHub flavor only, with its version given
+          # to Gradle from the tag; the file keeps the last stable, so F-Droid sees nothing new.
+          if [[ "$VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-beta\.([0-9]+)$ ]]; then
+            BASE="${BASH_REMATCH[1]}"
+            BUILD="${BASH_REMATCH[2]}"
+            if [ "$(printf '%s\n%s\n' "$VERSION_NAME" "$BASE" | sort -V | tail -n 1)" != "$BASE" ] || [ "$BASE" = "$VERSION_NAME" ]; then
+              echo "::error::Beta $TAG must lead up to a version after the stable $VERSION_NAME in $BUILD_FILE."
+              exit 1
+            fi
+            echo "Releasing beta $VERSION (build $BUILD of $BASE)."
+            {
+              echo "tag=$TAG"
+              echo "version=$VERSION"
+              echo "channel=beta"
+              echo "prerelease=true"
+              echo "gradle_task=:app:assembleGithubRelease"
+              echo "gradle_args=-PhazelChannel=beta -PhazelVersion=$BASE -PhazelBuild=$BUILD -PhazelCommit=$(git rev-parse HEAD) -PhazelBuildDate=$(date -u +%F)"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          case "$VERSION" in
+            *-*)
+              echo "::error::Tag $TAG is neither a stable (v1.1.18) nor a beta (v1.1.18-beta.1). Nightlies are built by nightly.yml."
+              exit 1
+              ;;
+          esac
+
+          # A tag names a commit, it does not set the version. When the two disagree either
+          # the wrong commit was tagged or the bump was forgotten, and in both cases the
+          # APKs would not be the ones the tag claims they are.
+          if [ "$VERSION_NAME" != "$VERSION" ]; then
+            echo "::error::Tag $TAG says $VERSION but $BUILD_FILE says $VERSION_NAME. Tag the commit that already carries the version."
+            exit 1
+          fi
+
+          # From 1.1.18 on, a stable's code is the channel formula's slot 99, so it sits above
+          # every nightly and beta of the same version (see the channel notes in the file).
+          if [ "$(printf '%s\n%s\n' 1.1.17 "$VERSION" | sort -V | tail -n 1)" != "1.1.17" ]; then
+            IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+            EXPECTED=$(( (MAJOR * 10000 + MINOR * 100 + PATCH) * 1000 + 990 ))
+            if [ "$VERSION_CODE" != "$EXPECTED" ]; then
+              echo "::error::Stable $VERSION needs the code $EXPECTED in $BUILD_FILE, not $VERSION_CODE."
+              exit 1
+            fi
+          fi
+
+          # F-Droid shows the changelog filed under the version code of the exact APK it is
+          # serving, so all five have to exist before the release goes out. A missing one is
+          # silent there: that architecture simply lists no changelog at all.
+          MISSING=
+          for OFFSET in 0 1 2 3 4; do
+            FILE="fastlane/metadata/android/en-US/changelogs/$((VERSION_CODE + OFFSET)).txt"
+            [ -s "$FILE" ] || MISSING="$MISSING $FILE"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::Store changelogs missing:$MISSING. Write them by hand, one per APK version code."
+            exit 1
+          fi
+
+          echo "Releasing $VERSION as version codes $VERSION_CODE to $((VERSION_CODE + 4))."
+
+          {
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+            echo "version_code=$VERSION_CODE"
+            echo "channel=stable"
+            echo "prerelease=false"
+            echo "gradle_task=:app:assembleRelease"
+            echo "gradle_args="
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+
+      # Without a keystore the build still finishes, but it produces APKs Android will not
+      # install over an existing copy, so the release is stopped here instead.
+      - name: Restore the signing keystore
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::No signing keystore is configured. Set the KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD repository secrets."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/signing"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/signing/hazel.jks"
+          cat > "$RUNNER_TEMP/signing/signing.properties" <<PROPS
+          storeFile=hazel.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+          echo "HAZEL_SIGNING_DIR=$RUNNER_TEMP/signing" >> "$GITHUB_ENV"
+
+      # One APK per architecture plus a universal one, all from a single assemble.
+      #
+      # Deliberately no -PVERSION_NAME. The version is already in the file, and passing it
+      # again here is exactly how a GitHub APK and an F-Droid APK built from the same tag
+      # end up disagreeing, because the F-Droid build never passes it. Plain assembleRelease
+      # is what its server runs, so this is the same build.
+      - name: Build every architecture
+        run: ./gradlew ${{ steps.version.outputs.gradle_task }} --stacktrace ${{ steps.version.outputs.gradle_args }}
+
+      - name: Collect the APKs
+        id: apks
+        run: |
+          mkdir -p artifacts
+          find app/build/outputs/apk -name '*.apk' -exec cp {} artifacts/ \;
+
+          # Every output is named after the version it carries, so checking that the five
+          # expected names are present is also the proof that the version in the file is the
+          # version that got built. Without it a misconfigured build publishes quietly.
+          CHANNEL=${{ steps.version.outputs.channel }}
+          for ABI in universal armeabi-v7a x86 x86_64 arm64-v8a; do
+            APK="artifacts/Hazel-v${{ steps.version.outputs.version }}-$ABI-$CHANNEL.apk"
+            if [ ! -f "$APK" ]; then
+              echo "::error::The build did not produce $APK. It produced: $(ls artifacts | tr '\n' ' ')"
+              exit 1
+            fi
+          done
+
+          {
+            echo "## Hazel ${{ steps.version.outputs.tag }}"
+            echo
+            for apk in artifacts/*.apk; do
+              echo "- \`$(basename "$apk")\` ($(du -h "$apk" | cut -f1))"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write the release notes
+        # Kept short on purpose: what changed lives on the website's What's new page, built
+        # from RELEASE-NOTES.md, so the release page only says which APK to take.
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Most devices are arm64 - Not sure?
+          Download the universal build, it works on everything
+
+          Wondering what's different? Here's [Hazel ${{ steps.version.outputs.version }} release notes.](https://sibtainocn.github.io/Hazel/hazel/whats-new.html)
+
+          > 💡 **Note**: GitHub APKs have the in-app updater, so new releases are auto-detected and downloadable without visiting this page. F-Droid APKs don't, since F-Droid handles updates on its own.
+
+          ---
+
+          <div align="center">
+
+          <table>
+            <tr>
+              <td align="center" width="25%"><a href="https://github.com/SibtainOcn/Hazel/releases/latest"><img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" alt="GitHub" width="100%"></a></td>
+              <td align="center" width="25%"><a href="https://f-droid.org/packages/com.hazel.android/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="F-Droid" width="100%"></a></td>
+              <td align="center" width="25%"><a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/SibtainOcn/Hazel"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Obtainium" width="100%"></a></td>
+              <td align="center" width="25%"><a href="https://www.openapk.net/hazel/com.hazel.android/"><img src="https://www.openapk.net/images/openapk-badge.png" alt="OpenAPK" width="100%"></a></td>
+            </tr>
+          </table>
+
+          </div>
+
+          ---
+
+          If **Hazel** made your downloads easier and you want to support open-source development:
+
+          [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="50">](https://www.buymeacoffee.com/sibtainocean)
+
+          * **GitHub Sponsors:** [github.com/sponsors/SibtainOcn](https://github.com/sponsors/SibtainOcn)
+          * **More ways to help:** [Support page](https://sibtainocn.github.io/Hazel/hazel/support.html)
+
+          ⭐ Enjoying Hazel? A star on the repo helps others find it.
+          NOTES
+
+      - name: Publish the release
+        # Pinned to a commit, since this job holds the signing secrets. A tag can be moved to
+        # other code; a commit cannot. Dependabot proposes new pins.
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          # The leaf leads the title so a release is recognisable in a list of them at a
+          # glance, before any of the words are read.
+          name: "🌿 Hazel ${{ steps.version.outputs.tag }}"
+          body_path: release-notes.md
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          make_latest: ${{ steps.version.outputs.prerelease != 'true' }}
+          files: artifacts/*.apk
+          fail_on_unmatched_files: true
+
+      # Once a stable is out, its betas (and older ones) are only clutter, and Hazel 1.1.17
+      # and older find the stable only on the first page of releases. The nightly is kept.
+      - name: Remove betas the stable replaces
+        if: steps.version.outputs.channel == 'stable'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release list --limit 100 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease) | .tagName' |
+            while read -r TAG; do
+              if [[ "$TAG" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-beta\.[0-9]+$ ]] &&
+                 [ "$(printf '%s\n%s\n' "${BASH_REMATCH[1]}" "$VERSION" | sort -V | tail -n 1)" = "$VERSION" ]; then
+                echo "Removing $TAG"
+                gh release delete "$TAG" --yes --cleanup-tag
+              fi
+            done
+
+      - name: Delete the keystore
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/signing"
