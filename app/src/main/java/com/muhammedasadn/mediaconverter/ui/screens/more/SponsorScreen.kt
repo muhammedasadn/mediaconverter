@@ -349,7 +349,7 @@ private fun shareApp(context: Context) {
     }
     runCatching {
         context.startActivity(
-            Intent.createChooser(share, "Share Hazel").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent.createChooser(share, "Share Media Converter").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
 }

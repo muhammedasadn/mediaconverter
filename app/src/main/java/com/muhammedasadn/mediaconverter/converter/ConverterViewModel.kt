@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.muhammedasadn.mediaconverter.util.MediaStoreHelper
 import com.muhammedasadn.mediaconverter.util.PermissionHelper
 import com.muhammedasadn.mediaconverter.util.StoragePaths
+import com.muhammedasadn.mediaconverter.utils.DeviceAbiCheck
 import com.muhammedasadn.mediaconverter.download.YtDlpEngine
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
@@ -209,11 +210,17 @@ class ConverterViewModel : ViewModel() {
                     outputFileName = outputName,
                     outputSizeBytes = outputSize,
                     outputPath = if (published) StoragePaths.CONVERTED_DISPLAY
-                    else "Hazel's own storage",
+                    else "Media Converter's own storage",
                     savedToAppStorage = !published
                 )
             } catch (e: Exception) {
-                finishWithError(readable(e.message.orEmpty()) ?: "The conversion failed.")
+                val msg = e.message.orEmpty()
+                val reason = if (DeviceAbiCheck.isEngineBinaryFailure(msg)) {
+                    DeviceAbiCheck.engineFailureMessage()
+                } else {
+                    readable(msg) ?: "The conversion failed."
+                }
+                finishWithError(reason)
             } finally {
                 tempInput?.delete()
             }

@@ -6,7 +6,7 @@
 |---|---|
 | **App Name** | Media Converter |
 | **Package ID (`applicationId`)** | `com.muhammedasadn.mediaconverter` |
-| **Version** | `1.2.19` (`versionCode` `10219990` base) |
+| **Version** | `1.2.20` (`versionCode` `10220990` base) |
 | **Platform** | Native Android (Kotlin + Jetpack Compose + Material 3) |
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target / Compile SDK** | Target SDK 35 / Compile SDK 37 |

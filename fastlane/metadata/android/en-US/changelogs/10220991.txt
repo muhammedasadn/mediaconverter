@@ -1,0 +1,4 @@
+- Reused a singleton Coil OkHttpClient with timeouts for faster, lower-overhead thumbnail loading.
+- Fixed potential startup engine race in yt-dlp update health checks by awaiting library readiness.
+- Extended ABI mismatch diagnostics to Offline Audio Converter and Gallery downloads for clear x86_64 vs arm64 APK guidance.
+- Added a professional README with badges, Mermaid architecture diagram, screenshots, and Android 7-15+ compatibility guide.

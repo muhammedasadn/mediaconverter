@@ -129,6 +129,7 @@ object YtDlpUpdater {
      * the last failed start printed, for telling the person why a build was refused.
      */
     private fun runsOnDevice(context: Context, onFailure: (String?) -> Unit = {}): Boolean? {
+        runCatching { com.muhammedasadn.mediaconverter.HazelApp.instance.awaitLibraryReadyBlocking() }
         try {
             YoutubeDL.getInstance().init(context)
         } catch (e: Exception) {

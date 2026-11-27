@@ -36,9 +36,17 @@ class HazelApp : Application(), SingletonImageLoader.Factory {
      * network fetcher rather than relying on whatever Coil can auto-detect. Its client goes
      * through the proxy like every other connection.
      */
+    private val imageHttpClient by lazy {
+        OkHttpClient.Builder()
+            .throughProxy()
+            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
+
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
-            .components { add(OkHttpNetworkFetcherFactory(callFactory = { OkHttpClient.Builder().throughProxy().build() })) }
+            .components { add(OkHttpNetworkFetcherFactory(callFactory = { imageHttpClient })) }
             .crossfade(true)
             .build()
 

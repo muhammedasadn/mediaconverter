@@ -5,6 +5,13 @@ All notable changes to Hazel are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.20] - 2026-11-27
+### Changed & Optimized
+- Reused a singleton `OkHttpClient` with explicit connect/read timeouts for Coil image loading instead of allocating a fresh client inside `callFactory`.
+- Synchronized `YtDlpUpdater` health checks with `awaitLibraryReadyBlocking()` to prevent startup initialization races.
+- Unified `DeviceAbiCheck` diagnostics across `DownloadViewModel`, `ConverterViewModel`, and `GalleryDlEngine` so ARM-on-x86 emulator mismatches report actionable APK guidance everywhere.
+- Upgraded `README.md` with release/build badges, system architecture diagram, compatibility guide, and application screenshots.
+
 ## [1.2.19] - 2026-11-27
 ### Fixed
 - Detected ABI mismatch (e.g. `arm64-v8a` APK installed on an `x86_64` PC emulator/WSA) and surfaced the exact APK architecture needed (`x86_64` or `universal`).

@@ -12,6 +12,7 @@ import com.muhammedasadn.mediaconverter.update.GalleryDlUpdater
 import com.muhammedasadn.mediaconverter.util.CaptionMetadata
 import com.muhammedasadn.mediaconverter.util.MediaStoreHelper
 import com.muhammedasadn.mediaconverter.util.StoragePaths
+import com.muhammedasadn.mediaconverter.utils.DeviceAbiCheck
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -312,7 +313,10 @@ object GalleryDlEngine {
                     val log = GalleryLogs.keep(logs, raw, secrets)
                     val last = lastError(log)
                     Log.w(TAG, "gallery-dl exited with $code: $last")
-                    throw GalleryDlException(GalleryDlException.classify(last), last, log = log.takeLast(LOG_TAIL_CHARS))
+                    val binaryBroken = DeviceAbiCheck.isEngineBinaryFailure(last) || DeviceAbiCheck.isEngineBinaryFailure(log)
+                    val kind = if (binaryBroken) GalleryDlException.Kind.SETUP else GalleryDlException.classify(last)
+                    val message = if (binaryBroken) DeviceAbiCheck.engineFailureMessage() else last
+                    throw GalleryDlException(kind, message, log = log.takeLast(LOG_TAIL_CHARS))
                 }
             } finally {
                 running.set(null)
@@ -323,7 +327,13 @@ object GalleryDlEngine {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            throw GalleryDlException(GalleryDlException.Kind.SETUP, e.message ?: e.javaClass.simpleName, e)
+            val rawMessage = e.message ?: e.javaClass.simpleName
+            val message = if (DeviceAbiCheck.isEngineBinaryFailure(rawMessage)) {
+                DeviceAbiCheck.engineFailureMessage()
+            } else {
+                rawMessage
+            }
+            throw GalleryDlException(GalleryDlException.Kind.SETUP, message, e)
         } finally {
             raw?.takeIf { it.exists() }?.let { runCatching { GalleryLogs.keep(logs, it, secrets) } }
         }
