@@ -132,13 +132,9 @@ internal object NewPipeStreams {
     )
 
     /** YouTube serves a stream only to the kind of client it was issued for. */
-    private fun headersFor(streamUrl: String): Map<String, String> {
+    internal fun headersFor(streamUrl: String): Map<String, String> {
         val localization = NewPipe.getPreferredLocalization()
         val agent = when {
-            YoutubeParsingHelper.isAndroidStreamingUrl(streamUrl) ->
-                YoutubeParsingHelper.getAndroidUserAgent(localization)
-            YoutubeParsingHelper.isIosStreamingUrl(streamUrl) ->
-                YoutubeParsingHelper.getIosUserAgent(localization)
             YoutubeParsingHelper.isVisionOsStreamingUrl(streamUrl) ->
                 YoutubeParsingHelper.getVisionOsUserAgent(localization)
             else -> NewPipeDownloader.USER_AGENT

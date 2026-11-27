@@ -1738,42 +1738,49 @@ class DownloadViewModel : ViewModel() {
                             )
                         )
                     } catch (e: Exception) {
-                        // A replayed payload whose addresses have expired fails here. That
-                        // is not the link failing, so it is read again and tried once more
-                        // before the item is recorded as a failure.
-                        // A pause counts as a reason not to retry, the same as a cancel.
-                        // Without that the retry treated the stopped process as a stale
-                        // payload, threw away the part file and started the download again,
-                        // which is the one thing a pause must not do.
-                        val replayed = InfoCache.infoJsonFor(plan.info.url) != null
-                        if (!replayed || isCancelled || isBatchCancelled || isPaused ||
-                            restartUrl == plan.info.url) throw e
+                        if (DeviceAbiCheck.isEngineBinaryFailure(e.message.orEmpty()) &&
+                            !planAccess.hasCookies &&
+                            NewPipeEngine.handlesStream(plan.info.url)
+                        ) {
+                            downloadViaNewPipeFallback(app, plan)
+                        } else {
+                            // A replayed payload whose addresses have expired fails here. That
+                            // is not the link failing, so it is read again and tried once more
+                            // before the item is recorded as a failure.
+                            // A pause counts as a reason not to retry, the same as a cancel.
+                            // Without that the retry treated the stopped process as a stale
+                            // payload, threw away the part file and started the download again,
+                            // which is the one thing a pause must not do.
+                            val replayed = InfoCache.infoJsonFor(plan.info.url) != null
+                            if (!replayed || isCancelled || isBatchCancelled || isPaused ||
+                                restartUrl == plan.info.url) throw e
 
-                        InfoCache.invalidate(plan.info.url)
-                        purgeFragments()
-                        // The fragments that earned the floor have just been thrown away,
-                        // so the floor goes with them rather than holding the bar up at a
-                        // figure nothing on disk backs any more.
-                        progressFloor = 0f
-                        lastFloorCheckAt = 0L
-                        // The cut starts over, so its figures do too.
-                        if (cutRun) {
-                            cutFraction = 0f
-                            cutSpeed = 0.0
-                            liveRun = true
-                            _state.update { it.copy(
-                                unmeasured = true, liveBytes = 0L, progress = 0f,
-                                totalBytes = 0L, eta = ""
-                            ) }
-                        }
-                        executeYtDlp(
-                            buildRequest(
-                                plan.info.url, plan.format, options, plan.title, plan.author,
-                                planAccess, limits,
-                                plan.info.mergeAudioFor(plan.audioLanguage)?.selector,
-                                plan.audioLanguage
+                            InfoCache.invalidate(plan.info.url)
+                            purgeFragments()
+                            // The fragments that earned the floor have just been thrown away,
+                            // so the floor goes with them rather than holding the bar up at a
+                            // figure nothing on disk backs any more.
+                            progressFloor = 0f
+                            lastFloorCheckAt = 0L
+                            // The cut starts over, so its figures do too.
+                            if (cutRun) {
+                                cutFraction = 0f
+                                cutSpeed = 0.0
+                                liveRun = true
+                                _state.update { it.copy(
+                                    unmeasured = true, liveBytes = 0L, progress = 0f,
+                                    totalBytes = 0L, eta = ""
+                                ) }
+                            }
+                            executeYtDlp(
+                                buildRequest(
+                                    plan.info.url, plan.format, options, plan.title, plan.author,
+                                    planAccess, limits,
+                                    plan.info.mergeAudioFor(plan.audioLanguage)?.selector,
+                                    plan.audioLanguage
+                                )
                             )
-                        )
+                        }
                     }
 
                     if (restartUrl == plan.info.url && !isBatchCancelled) {
@@ -2993,6 +3000,56 @@ class DownloadViewModel : ViewModel() {
             i += Character.charCount(cp)
         }
         return out.toString().trim().ifBlank { "download" }
+    }
+
+    private fun downloadViaNewPipeFallback(app: Context, plan: DownloadPlan) {
+        lastNotifiedAt = 0L
+        var lastShownAt = 0L
+        val steps = listOf(ProcessingStep.FETCH, ProcessingStep.SAVE)
+        _state.update { s ->
+            s.copy(
+                processingSteps = steps,
+                processingStep = 0,
+                isProcessing = false,
+                unmeasured = false,
+                eta = "",
+                status = "Starting download"
+            )
+        }
+        NewPipeEngine.downloadDirect(
+            url = plan.info.url,
+            requestedFormat = plan.format,
+            title = plan.title,
+            audioLanguage = plan.audioLanguage,
+            outputDir = downloadDir,
+            isCancelled = { isCancelled || isBatchCancelled || isPaused || restartUrl == plan.info.url }
+        ) { fraction, doneBytes, totalBytes, status ->
+            val now = System.currentTimeMillis()
+            if (now - lastShownAt >= UI_INTERVAL_MS || fraction >= 0.99f) {
+                lastShownAt = now
+                _state.update { current ->
+                    current.copy(
+                        progress = fraction,
+                        unmeasured = totalBytes <= 0L,
+                        liveBytes = doneBytes,
+                        totalBytes = if (totalBytes > 0L) totalBytes else current.totalBytes,
+                        status = status,
+                        isProcessing = status.startsWith("Muxing", ignoreCase = true)
+                    )
+                }
+            }
+            if (now - lastNotifiedAt >= NOTIFICATION_INTERVAL_MS) {
+                lastNotifiedAt = now
+                DownloadNotificationHelper.showProgress(
+                    context = app,
+                    progress = if (totalBytes > 0L) (fraction * 100f).toInt().coerceIn(0, 100) else -1,
+                    statusLine = status,
+                    mediaTitle = plan.title,
+                    doneBytes = doneBytes,
+                    totalBytes = totalBytes
+                )
+            }
+        }
     }
 
     private fun executeYtDlp(request: YoutubeDLRequest) {

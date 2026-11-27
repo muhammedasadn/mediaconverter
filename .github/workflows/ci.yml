@@ -197,9 +197,9 @@ jobs:
           else
             echo "task=assembleGithubDebug" >> "$GITHUB_OUTPUT"
             echo "variant=debug" >> "$GITHUB_OUTPUT"
-            echo "split=true" >> "$GITHUB_OUTPUT"
-            # Build only the github flavor and upload the arm64-v8a split (~68 MB instead of ~443 MB).
-            echo "glob=app/build/outputs/apk/github/debug/*arm64-v8a*.apk" >> "$GITHUB_OUTPUT"
+            echo "split=false" >> "$GITHUB_OUTPUT"
+            # Build a universal debug APK so CI artifacts run on both ARM phones and x86_64 PC emulators.
+            echo "glob=app/build/outputs/apk/github/debug/*universal*.apk" >> "$GITHUB_OUTPUT"
           fi
 
       # Only reachable on a push to main, so a pull request from a fork never sees these.
@@ -251,7 +251,7 @@ jobs:
         with:
           name: mediaconverter-${{ steps.target.outputs.variant }}
           path: ${{ steps.target.outputs.glob }}
-          retention-days: 3
+          retention-days: 1
           # Whether the build worked is decided by Assemble, and what it produced is listed
           # in the job summary either way. Not having room to store a copy is not a reason
           # to call a build broken, which is what this step did for two days.

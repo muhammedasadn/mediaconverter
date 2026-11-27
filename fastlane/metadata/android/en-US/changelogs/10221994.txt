@@ -1,0 +1,3 @@
+- Upgraded NewPipeExtractor to v0.27.1 for updated YouTube cipher/client extraction and playback.
+- Added pure-JVM OkHttp + Android MediaMuxer download fallback when yt-dlp native binary cannot execute on mismatched APKs.
+- Configured GitHub Actions CI to publish the universal debug APK so CI builds run on both ARM phones and x86_64 PC emulators.

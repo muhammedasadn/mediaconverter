@@ -5,6 +5,12 @@ All notable changes to Hazel are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.21] - 2026-11-28
+### Fixed & Improved
+- Upgraded `NewPipeExtractor` from `v0.26.5` to `v0.27.1` to restore YouTube n-sig/client stream extraction and playback.
+- Added `NewPipeDirectDownloader` (pure JVM `OkHttp` + Android `MediaMuxer`) so supported YouTube, SoundCloud, and Bandcamp links download even when the native `yt-dlp` runtime cannot execute on mismatched APK ABIs.
+- Updated GitHub Actions CI workflow (`.github/workflows/ci.yml`) to build and upload the `universal` debug APK so CI artifacts run out of the box on both ARM phones and `x86_64` PC emulators (BlueStacks, LDPlayer, WSA, AVD).
+
 ## [1.2.20] - 2026-11-27
 ### Changed & Optimized
 - Reused a singleton `OkHttpClient` with explicit connect/read timeouts for Coil image loading instead of allocating a fresh client inside `callFactory`.

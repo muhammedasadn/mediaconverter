@@ -38,4 +38,22 @@ object NewPipeEngine {
             if (!handlesStream(url)) return@withContext null
             runCatching { NewPipeStreams.playable(url, maxHeight, wish) }.getOrNull()
         }
+
+    fun downloadDirect(
+        url: String,
+        requestedFormat: com.muhammedasadn.mediaconverter.download.MediaFormat,
+        title: String,
+        audioLanguage: String,
+        outputDir: java.io.File,
+        isCancelled: () -> Boolean,
+        onProgress: (fraction: Float, doneBytes: Long, totalBytes: Long, status: String) -> Unit
+    ): java.io.File = NewPipeDirectDownloader.download(
+        url = url,
+        requestedFormat = requestedFormat,
+        title = title,
+        audioLanguage = audioLanguage,
+        outputDir = outputDir,
+        isCancelled = isCancelled,
+        onProgress = onProgress
+    )
 }

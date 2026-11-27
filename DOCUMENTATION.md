@@ -6,7 +6,7 @@
 |---|---|
 | **App Name** | Media Converter |
 | **Package ID (`applicationId`)** | `com.muhammedasadn.mediaconverter` |
-| **Version** | `1.2.20` (`versionCode` `10220990` base) |
+| **Version** | `1.2.21` (`versionCode` `10221990` base) |
 | **Platform** | Native Android (Kotlin + Jetpack Compose + Material 3) |
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target / Compile SDK** | Target SDK 35 / Compile SDK 37 |
@@ -18,7 +18,7 @@
 1. **`youtubedl-android` (`0.18.1`)**: Embeds Python 3.12 (`libpython.so` + `libpython.zip.so`), QuickJS (`libqjs.so`), aria2c (`libaria2c.so`), and the `yt-dlp` binary for extracting metadata and downloading video/audio streams from 1,500+ sites.
 2. **FFmpeg (`youtubedl-android-ffmpeg` `0.18.1`)**: Runs on-device to merge adaptive video/audio streams, embed subtitles/chapters/metadata/thumbnails, trim/cut video segments, and power the offline video-to-audio converter.
 3. **`gallery-dl` (bundled in `assets/gallery-dl.zip`)**: Runs through the embedded Python runtime to inspect and download posts, profiles, carousels, and image searches across image-focused platforms.
-4. **NewPipeExtractor (`v0.26.5`)**: Fast, pure-JVM extractor (zero Python startup overhead) used for instant in-app search, stream playback resolution, and optional low-latency listing on supported platforms (YouTube, YouTube Music, SoundCloud, Bandcamp).
+4. **NewPipeExtractor (`v0.27.1`)**: Fast, pure-JVM extractor (zero Python startup overhead) used for instant in-app search, stream playback resolution, optional low-latency listing, and `OkHttp` + `MediaMuxer` fallback downloads on supported platforms (YouTube, YouTube Music, SoundCloud, Bandcamp).
 5. **AndroidX Media3 ExoPlayer (`1.11.1`)**: Powers the in-app video/audio preview player and the interactive cut/trim timeline.
 
 ---
