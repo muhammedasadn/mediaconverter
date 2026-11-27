@@ -367,7 +367,6 @@ object MediaProbe {
         if (singleItem) addOption("--no-playlist")
         PostItem.indexOf(url)?.let { addOption("--playlist-items", it.toString()) }
         addOption("--no-warnings")
-        addOption("--no-check-certificates")
         addOption("--skip-download")
         addOption("--compat-options", "manifest-filesize-approx")
         addOption("--cache-dir", cacheDir.absolutePath)

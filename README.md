@@ -31,6 +31,11 @@
   .\gradlew.bat :app:assembleDebug
   ```
 - **Cloud Build (GitHub Actions):** Push to `main` or trigger **Actions → CI → Run workflow** to build and download the APK artifact without installing Android Studio locally.
+- **Prebuilt APKs:** Download directly from [GitHub Releases](https://github.com/muhammedasadn/mediaconverter/releases/latest).
+
+## Documentation
+
+Read [DOCUMENTATION.md](DOCUMENTATION.md) for full details on architecture, how link extraction and processing work, what features require internet vs. work offline, security/privacy, and Android installation troubleshooting.
 
 ## Project Checks
 

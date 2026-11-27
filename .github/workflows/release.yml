@@ -119,12 +119,20 @@ jobs:
               exit 1
             fi
             echo "Releasing beta $VERSION (build $BUILD of $BASE)."
+            if [ -n "$KEYSTORE_BASE64" ]; then
+              GRADLE_TASK=":app:assembleGithubRelease"
+              APK_SUFFIX="beta"
+            else
+              GRADLE_TASK=":app:assembleGithubDebug"
+              APK_SUFFIX="debug"
+            fi
             {
               echo "tag=$TAG"
               echo "version=$VERSION"
               echo "channel=beta"
+              echo "apk_suffix=$APK_SUFFIX"
               echo "prerelease=true"
-              echo "gradle_task=:app:assembleGithubRelease"
+              echo "gradle_task=$GRADLE_TASK"
               echo "gradle_args=-PhazelChannel=beta -PhazelVersion=$BASE -PhazelBuild=$BUILD -PhazelCommit=$(git rev-parse HEAD) -PhazelBuildDate=$(date -u +%F)"
             } >> "$GITHUB_OUTPUT"
             exit 0
@@ -171,13 +179,23 @@ jobs:
 
           echo "Releasing $VERSION as version codes $VERSION_CODE to $((VERSION_CODE + 4))."
 
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            GRADLE_TASK=":app:assembleRelease"
+            APK_SUFFIX="stable"
+          else
+            echo "::warning::KEYSTORE_BASE64 is not set; building debug-signed github APKs so Android devices can install them directly."
+            GRADLE_TASK=":app:assembleGithubDebug"
+            APK_SUFFIX="debug"
+          fi
+
           {
             echo "tag=$TAG"
             echo "version=$VERSION"
             echo "version_code=$VERSION_CODE"
             echo "channel=stable"
+            echo "apk_suffix=$APK_SUFFIX"
             echo "prerelease=false"
-            echo "gradle_task=:app:assembleRelease"
+            echo "gradle_task=$GRADLE_TASK"
             echo "gradle_args="
           } >> "$GITHUB_OUTPUT"
 
@@ -195,11 +213,8 @@ jobs:
       # Without a keystore the build still finishes, but it produces APKs Android will not
       # install over an existing copy, so the release is stopped here instead.
       - name: Restore the signing keystore
+        if: env.KEYSTORE_BASE64 != ''
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::No signing keystore is configured. Set the KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD repository secrets."
-            exit 1
-          fi
           mkdir -p "$RUNNER_TEMP/signing"
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/signing/hazel.jks"
           cat > "$RUNNER_TEMP/signing/signing.properties" <<PROPS
@@ -228,9 +243,9 @@ jobs:
           # Every output is named after the version it carries, so checking that the five
           # expected names are present is also the proof that the version in the file is the
           # version that got built. Without it a misconfigured build publishes quietly.
-          CHANNEL=${{ steps.version.outputs.channel }}
+          APK_SUFFIX=${{ steps.version.outputs.apk_suffix }}
           for ABI in universal armeabi-v7a x86 x86_64 arm64-v8a; do
-            APK="artifacts/MediaConverter-v${{ steps.version.outputs.version }}-$ABI-$CHANNEL.apk"
+            APK="artifacts/MediaConverter-v${{ steps.version.outputs.version }}-$ABI-$APK_SUFFIX.apk"
             if [ ! -f "$APK" ]; then
               echo "::error::The build did not produce $APK. It produced: $(ls artifacts | tr '\n' ' ')"
               exit 1

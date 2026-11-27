@@ -520,6 +520,8 @@ class CookieWebViewActivity : ComponentActivity() {
             javaScriptEnabled = true
             javaScriptCanOpenWindowsAutomatically = true
             domStorageEnabled = true
+            allowFileAccess = false
+            allowContentAccess = false
             cacheMode = WebSettings.LOAD_DEFAULT
             setSupportZoom(true)
             builtInZoomControls = true

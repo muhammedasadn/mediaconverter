@@ -1,0 +1,4 @@
+- Fixed link reading failure (libpython.so execution error) by preserving unstripped engine native binaries and enabling extractNativeLibs.
+- Fixed startup engine initialization race when pasting links quickly after app launch.
+- Fixed TLS certificate verification default in MediaProbe and hardened WebView file/content access.
+- Added DOCUMENTATION.md and direct signed GitHub Release APKs for all Android architectures.

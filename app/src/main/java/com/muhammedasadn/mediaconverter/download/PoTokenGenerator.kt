@@ -140,6 +140,8 @@ object PoTokenGenerator {
         val html = context.assets.open("po_token.html").bufferedReader().use { it.readText() }
         WebView(context).apply {
             settings.javaScriptEnabled = true
+            settings.allowFileAccess = false
+            settings.allowContentAccess = false
             addJavascriptInterface(Bridge, "HazelPoToken")
             webViewClient = object : WebViewClient() {
                 override fun onReceivedHttpAuthRequest(view: WebView?, handler: HttpAuthHandler, host: String?, realm: String?) {

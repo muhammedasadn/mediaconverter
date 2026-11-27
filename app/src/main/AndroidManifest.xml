@@ -54,6 +54,7 @@
     <application
         android:name=".HazelApp"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config"

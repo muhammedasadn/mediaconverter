@@ -5,6 +5,14 @@ All notable changes to Hazel are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.18] - 2026-11-27
+### Fixed
+- Fixed native `libpython.so` execution failure (`no closing quote` / `ENOEXEC`) by keeping all prebuilt engine native binaries unstripped (`keepDebugSymbols += "**/*.so"`) and setting `android:extractNativeLibs="true"`.
+- Fixed startup initialization race condition where pasting or sharing a link right after launch could invoke `yt-dlp` or `gallery-dl` before engine unpacking finished.
+- Fixed security issue where `MediaProbe` unconditionally passed `--no-check-certificates` instead of respecting the user's Advanced Settings toggle.
+- Hardened `CookieWebViewActivity` and `PoTokenGenerator` WebViews by disabling local file and content URI access.
+- Added comprehensive `DOCUMENTATION.md` and release-ready signed APK packaging across all ABIs.
+
 ## [1.2.17] - 2026-11-26
 ### Added
 - Gallery tab powered by gallery-dl: save photos, videos and captions from posts, profiles and galleries on Instagram, X, Reddit, Pinterest, Tumblr and many more sites.

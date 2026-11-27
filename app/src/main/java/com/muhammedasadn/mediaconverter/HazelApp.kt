@@ -16,6 +16,7 @@ import com.muhammedasadn.mediaconverter.update.YtDlpUpdater
 import com.muhammedasadn.mediaconverter.utils.CrashLogger
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -45,6 +47,9 @@ class HazelApp : Application(), SingletonImageLoader.Factory {
 
     /** Whether [startLibraryInit] has already run. */
     private val libraryInitStarted = AtomicBoolean(false)
+
+    /** Completed once local engine unpacking and validation finishes (or fails). */
+    private val libraryReady = CompletableDeferred<Unit>()
 
     override fun onCreate() {
         super.onCreate()
@@ -128,6 +133,8 @@ class HazelApp : Application(), SingletonImageLoader.Factory {
             } catch (e: Exception) {
                 Log.e("Hazel", "Library init failed: ${e.message}")
                 return@launch
+            } finally {
+                libraryReady.complete(Unit)
             }
 
             // Fetched in the background and swapped in only while nothing is running, so
@@ -137,6 +144,16 @@ class HazelApp : Application(), SingletonImageLoader.Factory {
             GalleryQueue.restore(this@HazelApp)
             GalleryDlUpdater.autoUpdateIfAvailable(this@HazelApp)
         }
+    }
+
+    /**
+     * Ensures local yt-dlp/FFmpeg initialization has completed before running an engine command.
+     * Safe to call from any worker thread; starts initialization immediately if not yet started.
+     */
+    fun awaitLibraryReadyBlocking(timeoutMs: Long = 30_000L) {
+        if (libraryReady.isCompleted) return
+        startLibraryInit()
+        runBlocking { withTimeoutOrNull(timeoutMs) { libraryReady.await() } }
     }
 
     companion object {

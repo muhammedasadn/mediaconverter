@@ -3590,6 +3590,9 @@ class DownloadViewModel : ViewModel() {
                     "network" in lower
                 -> "Network error, check your connection"
 
+            "libpython.so" in lower || "no closing quote" in lower || "exec format" in lower
+                -> "Engine failed to start on this device. Reinstall or use the universal APK"
+
             "ffmpeg" in lower || "postprocessor" in lower
                 -> "Processing failed, try again"
 

@@ -51,6 +51,7 @@ internal class PythonRuntime private constructor(context: Context) {
          * once when it already ran, so calling this before every run costs nothing.
          */
         fun ready(context: Context): PythonRuntime {
+            runCatching { com.muhammedasadn.mediaconverter.HazelApp.instance.awaitLibraryReadyBlocking() }
             YoutubeDL.getInstance().init(context.applicationContext)
             return PythonRuntime(context.applicationContext)
         }

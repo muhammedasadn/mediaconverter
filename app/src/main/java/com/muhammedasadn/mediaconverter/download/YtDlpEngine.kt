@@ -41,13 +41,16 @@ object YtDlpEngine {
         request: YoutubeDLRequest,
         processId: String? = null,
         callback: ((Float, Long, String) -> Unit)? = null
-    ): YoutubeDLResponse = try {
-        executeOnce(request, processId, callback)
-    } catch (e: YoutubeDLException) {
-        // A proxy that is down, or one ffmpeg cannot use, is said in the user's words as the
-        // last error line, which is the one a failed download's card shows.
-        val hint = NetworkProxy.hintFor(e.message) ?: throw e
-        throw YoutubeDLException("${e.message}\nERROR: ${HazelApp.instance.getString(hint)}", e)
+    ): YoutubeDLResponse {
+        runCatching { HazelApp.instance.awaitLibraryReadyBlocking() }
+        return try {
+            executeOnce(request, processId, callback)
+        } catch (e: YoutubeDLException) {
+            // A proxy that is down, or one ffmpeg cannot use, is said in the user's words as the
+            // last error line, which is the one a failed download's card shows.
+            val hint = NetworkProxy.hintFor(e.message) ?: throw e
+            throw YoutubeDLException("${e.message}\nERROR: ${HazelApp.instance.getString(hint)}", e)
+        }
     }
 
     private fun executeOnce(

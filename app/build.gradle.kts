@@ -191,8 +191,8 @@ android {
         // The release's own code, with the architecture digits left at zero. This is what
         // the universal APK keeps and what a build with the splits turned off reports;
         // every per-architecture output replaces it further down.
-        versionCode = 10217990
-        versionName = "1.2.17"
+        versionCode = 10218990
+        versionName = "1.2.18"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -282,18 +282,13 @@ android {
         jniLibs {
             useLegacyPackaging = true
 
-            // Ship this one prebuilt exactly as the dependency provides it.
+            // Keep all prebuilt engine binaries and datastore counter unstripped.
             //
-            // AGP strips the debug symbols out of bundled native libraries using the strip
-            // tool from whichever NDK the machine happens to have, and the result differs
-            // between NDK versions. That is invisible until someone rebuilds the app and
-            // compares: F-Droid does exactly that, and it was the only file out of the nine
-            // in the APK that failed to match, at 7784 bytes here against the 10360 the
-            // dependency ships.
-            //
-            // Named rather than "**/*.so" on purpose. The engine binaries are tens of
-            // megabytes and strip is worth keeping for them; they already reproduce.
-            keepDebugSymbols += "**/libdatastore_shared_counter.so"
+            // youtubedl-android 0.18.1 ships prebuilt 16KB-aligned ELF binaries (libpython.so,
+            // libffmpeg.so, libqjs.so, libaria2c.so) and zip-payload .so files (libpython.zip.so).
+            // Letting AGP's NDK strip tool rewrite them can corrupt the tiny libpython.so
+            // stub launcher and cause ENOEXEC ("no closing quote") on Android devices.
+            keepDebugSymbols += "**/*.so"
         }
     }
 }
