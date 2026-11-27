@@ -261,16 +261,19 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Write the release notes
-        # Kept short on purpose: what changed lives on the website's What's new page, built
-        # from RELEASE-NOTES.md, so the release page only says which APK to take.
+        # Kept short on purpose: what changed lives in CHANGELOG.md,
+        # so the release page clearly says which APK to take.
         run: |
           cat > release-notes.md <<'NOTES'
-          Most devices are arm64 - Not sure?
-          Download the universal build, it works on everything
+          ### Which APK should you install?
+          - **Android phones (2017+ / modern devices):** `arm64-v8a`
+          - **PC Android Emulators / WSA (BlueStacks, LDPlayer, Nox, AVD):** `x86_64` (or `universal`)
+          - **Older 32-bit Android phones:** `armeabi-v7a`
+          - **Not sure / works on everything:** `universal`
 
-          Wondering what's different? Here's [Media Converter ${{ steps.version.outputs.version }} release notes.](https://muhammedasadn.github.io/mediaconverter/hazel/whats-new.html)
+          Wondering what changed? See [CHANGELOG.md](https://github.com/muhammedasadn/mediaconverter/blob/main/CHANGELOG.md).
 
-          > 💡 **Note**: GitHub APKs have the in-app updater, so new releases are auto-detected and downloadable without visiting this page. F-Droid APKs don't, since F-Droid handles updates on its own.
+          > 💡 **Note:** If you switch between a debug-signed APK and a keystore-signed release APK (or move from `arm64-v8a` to `x86_64` on an emulator), uninstall the previous build first.
 
           ---
 

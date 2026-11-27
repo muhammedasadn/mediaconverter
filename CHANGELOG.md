@@ -5,6 +5,13 @@ All notable changes to Hazel are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.19] - 2026-11-27
+### Fixed
+- Detected ABI mismatch (e.g. `arm64-v8a` APK installed on an `x86_64` PC emulator/WSA) and surfaced the exact APK architecture needed (`x86_64` or `universal`).
+- Added automatic NewPipe fallback in `LinkResolver` and format reading when `yt-dlp` native engine startup hits a binary execution error.
+- Avoided redundant retry attempts on terminal engine binary startup failures (`ENOEXEC`).
+- Updated GitHub Release notes to clarify emulator (`x86_64` / `universal`) vs Android phone (`arm64-v8a`) APK selection.
+
 ## [1.2.18] - 2026-11-27
 ### Fixed
 - Fixed native `libpython.so` execution failure (`no closing quote` / `ENOEXEC`) by keeping all prebuilt engine native binaries unstripped (`keepDebugSymbols += "**/*.so"`) and setting `android:extractNativeLibs="true"`.

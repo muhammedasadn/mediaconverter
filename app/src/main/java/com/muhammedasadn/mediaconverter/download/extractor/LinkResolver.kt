@@ -7,6 +7,8 @@ import com.muhammedasadn.mediaconverter.download.InfoCache
 import com.muhammedasadn.mediaconverter.download.MediaProbe
 import com.muhammedasadn.mediaconverter.download.SiteAccess
 import com.muhammedasadn.mediaconverter.download.extractor.newpipe.NewPipeEngine
+import com.muhammedasadn.mediaconverter.utils.DeviceAbiCheck
+import kotlinx.coroutines.CancellationException
 import java.io.File
 
 /**
@@ -64,21 +66,33 @@ object LinkResolver {
     ): LinkContents {
 
         if (source == ListingSource.NEWPIPE && !access.hasCookies) {
-            // First check collections (playlists & channel tabs) for low-latency listing
-            if (NewPipeEngine.handlesCollection(url)) {
-                NewPipeEngine.list(url)?.let { many ->
-                    InfoCache.putListing(url, many)
-                    return many
-                }
-            } else if (NewPipeEngine.handlesStream(url)) {
-                NewPipeEngine.single(url)?.let { info ->
-                    InfoCache.put(url, info, rawJson = null)
-                    return LinkContents.Single(info)
-                }
-            }
+            tryNewPipe(url)?.let { return it }
         }
 
         // Silent universal fallback to yt-dlp binary engine
-        return MediaProbe.listContents(url, cacheDir, access, fetchMode, forceIpv4, processId)
+        return try {
+            MediaProbe.listContents(url, cacheDir, access, fetchMode, forceIpv4, processId)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            if (!access.hasCookies && DeviceAbiCheck.isEngineBinaryFailure(e.message.orEmpty())) {
+                tryNewPipe(url)?.let { return it }
+            }
+            throw e
+        }
+    }
+
+    private suspend fun tryNewPipe(url: String): LinkContents? {
+        if (NewPipeEngine.handlesCollection(url)) {
+            NewPipeEngine.list(url)?.let { many ->
+                InfoCache.putListing(url, many)
+                return many
+            }
+        } else if (NewPipeEngine.handlesStream(url)) {
+            NewPipeEngine.single(url)?.let { info ->
+                InfoCache.put(url, info, rawJson = null)
+                return LinkContents.Single(info)
+            }
+        }
+        return null
     }
 }

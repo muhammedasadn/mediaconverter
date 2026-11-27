@@ -24,6 +24,7 @@ import com.muhammedasadn.mediaconverter.download.extractor.MediaSearch
 import com.muhammedasadn.mediaconverter.download.extractor.SearchSource
 import com.muhammedasadn.mediaconverter.download.extractor.newpipe.NewPipeEngine
 import com.muhammedasadn.mediaconverter.util.StoragePaths
+import com.muhammedasadn.mediaconverter.utils.DeviceAbiCheck
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlin.math.roundToInt
@@ -1313,15 +1314,30 @@ class DownloadViewModel : ViewModel() {
             }
         }
 
-        return probeWithRetry(
-            url,
-            access,
-            SettingsRepository.getFetchMode(app).first(),
-            SettingsRepository.getForceIpv4(app).first(),
-            // Each read has an id of its own: the engine refuses a second process under an
-            // id already running, which failed every read after the first in a set.
-            "${MediaProbe.PROBE_PROCESS_ID}_formats_${LinkKey.digest(url)}"
-        )
+        return try {
+            probeWithRetry(
+                url,
+                access,
+                SettingsRepository.getFetchMode(app).first(),
+                SettingsRepository.getForceIpv4(app).first(),
+                // Each read has an id of its own: the engine refuses a second process under an
+                // id already running, which failed every read after the first in a set.
+                "${MediaProbe.PROBE_PROCESS_ID}_formats_${LinkKey.digest(url)}"
+            )
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            if (DeviceAbiCheck.isEngineBinaryFailure(e.message.orEmpty()) && !access.hasCookies && NewPipeEngine.handlesStream(url)) {
+                runCatching { NewPipeEngine.single(url) }
+                    .onFailure { if (it is CancellationException) throw it }
+                    .getOrNull()
+                    ?.takeIf { it.hasResolvedFormats }
+                    ?.let {
+                        InfoCache.put(url, it, rawJson = null)
+                        return it
+                    }
+            }
+            throw e
+        }
     }
 
     /**
@@ -3524,6 +3540,7 @@ class DownloadViewModel : ViewModel() {
      * metadata dump simply not working for this source.
      */
     private fun isTerminal(raw: String): Boolean {
+        if (DeviceAbiCheck.isEngineBinaryFailure(raw)) return true
         val lower = raw.lowercase()
         return TERMINAL_MARKERS.any { it in lower }
     }
@@ -3590,8 +3607,8 @@ class DownloadViewModel : ViewModel() {
                     "network" in lower
                 -> "Network error, check your connection"
 
-            "libpython.so" in lower || "no closing quote" in lower || "exec format" in lower
-                -> "Engine failed to start on this device. Reinstall or use the universal APK"
+            DeviceAbiCheck.isEngineBinaryFailure(raw)
+                -> DeviceAbiCheck.engineFailureMessage()
 
             "ffmpeg" in lower || "postprocessor" in lower
                 -> "Processing failed, try again"

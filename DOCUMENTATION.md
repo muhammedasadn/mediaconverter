@@ -6,7 +6,7 @@
 |---|---|
 | **App Name** | Media Converter |
 | **Package ID (`applicationId`)** | `com.muhammedasadn.mediaconverter` |
-| **Version** | `1.2.18` (`versionCode` `10218990` base) |
+| **Version** | `1.2.19` (`versionCode` `10219990` base) |
 | **Platform** | Native Android (Kotlin + Jetpack Compose + Material 3) |
 | **Minimum Android** | Android 7.0 (API 24) |
 | **Target / Compile SDK** | Target SDK 35 / Compile SDK 37 |
@@ -86,9 +86,10 @@
 
 ### Which APK Should I Download?
 From [GitHub Releases](https://github.com/muhammedasadn/mediaconverter/releases/latest):
-- **`MediaConverter-vX.Y.Z-arm64-v8a-*.apk` (~68–83 MB):** Best for almost all Android phones (2017 and newer).
+- **`MediaConverter-vX.Y.Z-arm64-v8a-*.apk` (~85 MB):** Best for almost all physical Android phones (2017 and newer).
+- **`MediaConverter-vX.Y.Z-x86_64-*.apk` (~88 MB):** Best for PC Android emulators and Windows Subsystem for Android (BlueStacks, LDPlayer, Nox, Android Studio AVD). Do **not** install `arm64-v8a` on an x86_64 PC emulator, because Android's ARM translation layer cannot execute `libpython.so` directly (`ENOEXEC` / `no closing quote`).
 - **`MediaConverter-vX.Y.Z-armeabi-v7a-*.apk`:** For older 32-bit Android phones.
-- **`MediaConverter-vX.Y.Z-universal-*.apk` (~206 MB):** Works on every Android phone and emulator if you are unsure of your CPU architecture.
+- **`MediaConverter-vX.Y.Z-universal-*.apk` (~224 MB):** Works on every Android phone and PC emulator if you are unsure of your CPU architecture.
 
 ### Installation Steps
 1. Download the `.apk` directly from the **Releases** page (no zip extraction needed).
@@ -105,6 +106,6 @@ From [GitHub Releases](https://github.com/muhammedasadn/mediaconverter/releases/
 - `REQUEST_INSTALL_PACKAGES` (`github` flavor only): Allows the optional in-app updater to launch the Android installer for GitHub release APKs.
 
 ### Troubleshooting
-- **Link fails with `libpython.so` / engine startup error:** Reinstall using the latest `v1.2.18+` APK (which preserves unstripped native binaries and sets `android:extractNativeLibs="true"`), or try the `universal` APK.
+- **Link fails with `libpython.so` / `no closing quote` / `Wrong APK installed`:** If you are using a PC Android emulator or WSA (BlueStacks, LDPlayer, Nox, AVD), uninstall the `arm64-v8a` APK and install the **`x86_64`** or **`universal`** APK. Android emulators with ARM translation cannot `execve` ARM `libpython.so` directly. On a physical phone, reinstall the matching ABI APK (`arm64-v8a` for modern phones) or the `universal` APK.
 - **YouTube asks to sign in / "confirm you're not a bot":** Open **More → Cookies** and sign in to YouTube, or enable **Auto PO Tokens** in **More → Advanced settings**.
 - **Downloads pause immediately on mobile data:** Turn off **Wi-Fi only** in Settings, or connect to Wi-Fi.

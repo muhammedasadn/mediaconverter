@@ -1,0 +1,3 @@
+- Detected ABI mismatch when an arm64-v8a APK is installed on an x86_64 PC emulator or WSA and reported the exact x86_64 or universal APK required.
+- Added automatic NewPipe fallback when yt-dlp native binary startup fails on supported links.
+- Improved GitHub Release notes to guide Android phone vs PC emulator APK selection.
