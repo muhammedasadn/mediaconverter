@@ -195,11 +195,11 @@ jobs:
             # is 206 MB of the 470 and is the one thing that must not be picked up here.
             echo "glob=app/build/outputs/apk/**/*arm64-v8a*.apk" >> "$GITHUB_OUTPUT"
           else
-            echo "task=assembleDebug" >> "$GITHUB_OUTPUT"
+            echo "task=assembleGithubDebug" >> "$GITHUB_OUTPUT"
             echo "variant=debug" >> "$GITHUB_OUTPUT"
-            echo "split=false" >> "$GITHUB_OUTPUT"
-            # Not split, so there is one APK and this is it.
-            echo "glob=app/build/outputs/apk/**/*.apk" >> "$GITHUB_OUTPUT"
+            echo "split=true" >> "$GITHUB_OUTPUT"
+            # Build only the github flavor and upload the arm64-v8a split (~68 MB instead of ~443 MB).
+            echo "glob=app/build/outputs/apk/github/debug/*arm64-v8a*.apk" >> "$GITHUB_OUTPUT"
           fi
 
       # Only reachable on a push to main, so a pull request from a fork never sees these.
